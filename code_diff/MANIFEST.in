@@ -1,0 +1,2 @@
+recursive-include code_diff/static *.*
+include code_diff.json
