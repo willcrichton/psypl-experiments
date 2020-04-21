@@ -27,3 +27,6 @@ class VariableMemoryExperiment(BaseWidget):
 
 class VariableArithmeticMemoryExperiment(BaseWidget):
     _view_name = Unicode('VariableArithmeticMemoryView').tag(sync=True)
+
+class VariableArithmeticSequenceExperiment(BaseWidget):
+    _view_name = Unicode('VariableArithmeticSequenceView').tag(sync=True)

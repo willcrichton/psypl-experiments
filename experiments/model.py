@@ -4,12 +4,14 @@ from lark import Lark, Token
 from dataclasses import dataclass
 from enum import Enum
 from typing import List, Any
-from random import choice
+
+def choice(l):
+    n = len(l)
+    return l[dist.Categorical(tensor([1. / n for _ in range(n)])).sample().item()]
 
 def guess():
     max_n = 9
-    random_num = dist.Categorical(tensor([1. / max_n for _ in range(max_n)]))
-    return sample('guess', random_num).item()
+    return choice(list(range(0, max_n+1)))
 
 
 @dataclass
@@ -42,7 +44,7 @@ class WorkingMemory:
         
         num_chunks = len(self.chunks)
         if num_chunks > 7:
-            prob_forget = dist.Beta((num_chunks - 7) * 10, 1).sample()
+            prob_forget = dist.Beta((num_chunks - 7.9) * 15, 1).sample()
             did_forget = dist.Bernoulli(prob_forget).sample()
             
             if did_forget.item() == 1:
@@ -108,10 +110,12 @@ parser = Lark('''
 var: CNAME
 binop: "+" -> plus | "-" -> sub
   
-expr: CNAME -> var
+expr: atom -> atom
+  | expr binop atom -> binop
+
+atom: CNAME -> var
   | NUMBER -> number
-  | expr binop expr -> binop
-  
+
 stmt: CNAME "=" expr -> assign 
   | expr -> expr
   
@@ -131,7 +135,8 @@ def lark_tree_to_ast(t):
         'binop': lambda: Binop(left=c[0], operator=c[1], right=c[2]),
         'expr': lambda: Expr(value=c[0]),
         'var': lambda: Var(var=c[0]),
-        'number': lambda: Number(n=int(c[0]))
+        'number': lambda: Number(n=int(c[0])),
+        'atom': lambda: c[0]
     }[t.data]()
 
 def parse(s):
@@ -141,15 +146,18 @@ def trace_expr(expr, wm):
     if isinstance(expr, Number):
         return expr.n
     elif isinstance(expr, Var):
-        return wm.fetch(expr.var)
+        val = wm.fetch_var(expr.var)
+        return guess() if val is None else val
     elif isinstance(expr, Binop):
         left = trace_expr(expr.left, wm)
         right = trace_expr(expr.right, wm)
         return expr.operator.eval(left, right)
+    else:
+        raise Exception("Unreachable")
 
 def trace_stmt(stmt, wm):
     if isinstance(stmt, Assign):
-        wm.store(stmt.var, trace_expr(stmt.value, wm))
+        wm.store_var_val(stmt.var, trace_expr(stmt.value, wm))
     elif isinstance(stmt, Expr):
         print(trace_expr(stmt.value, wm))
         
