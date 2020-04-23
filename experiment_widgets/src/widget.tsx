@@ -9,3 +9,4 @@ export class ExperimentModel extends DOMWidgetModel {};
 export {VariableMemoryView} from './variable_memory';
 export {VariableArithmeticMemoryView} from './variable_arithmetic_memory';
 export {VariableArithmeticSequenceView} from './variable_arithmetic_sequence';
+export {VariableTracingView} from './variable_tracing';

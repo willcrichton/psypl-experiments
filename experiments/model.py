@@ -1,18 +1,26 @@
-from pyro import sample, distributions as dist
+from pyro import distributions as dist
 from torch import tensor, sigmoid
 from lark import Lark, Token
 from dataclasses import dataclass
 from enum import Enum
 from typing import List, Any
+import torch
+
+def sample(l, k):
+    n = len(l)
+    probs = dist.Dirichlet(torch.ones(n)).sample()
+    idxs = torch.topk(probs, k).indices
+    return [l[i] for i in idxs]
 
 def choice(l):
-    n = len(l)
-    return l[dist.Categorical(tensor([1. / n for _ in range(n)])).sample().item()]
+    return sample(l, k=1)[0]
 
 def guess():
     max_n = 9
     return choice(list(range(0, max_n+1)))
 
+def flip(p):
+    return dist.Bernoulli(p).sample().item() == 1.
 
 @dataclass
 class Chunk:
@@ -25,7 +33,7 @@ class VarNameChunk(Chunk):
 @dataclass
 class VarValueChunk(Chunk):
     var_link: Chunk
-                
+
 
 class WorkingMemory:
     def __init__(self):
@@ -39,26 +47,45 @@ class WorkingMemory:
         self.store(var_name)
         self.store(var_val)
 
+    def maybe_forget(self, prob_forget):
+        did_forget = flip(prob_forget)
+        if did_forget and len(self.chunks) > 0:
+            i = choice(list(range(len(self.chunks))))
+            del self.chunks[i]
+
+    def maybe_swap(self, prob_swap):
+        did_swap = flip(prob_swap)
+        vrs = [chunk for chunk in self.chunks if isinstance(chunk, VarNameChunk)]
+        if did_swap and len(vrs) >= 2:
+            [x, y] = sample(vrs, k=2)
+            tmp = x.value_link
+            x.value_link = y.value_link
+            y.value_link = tmp
+
     def store(self, chunk):
         self.chunks.append(chunk)
         
         num_chunks = len(self.chunks)
         if num_chunks > 7:
             prob_forget = dist.Beta((num_chunks - 7.9) * 15, 1).sample()
-            did_forget = dist.Bernoulli(prob_forget).sample()
-            
-            if did_forget.item() == 1:
-                i = choice(list(range(num_chunks)))
-                del self.chunks[i]
+            self.maybe_forget(prob_forget)
 
     def fetch_var(self, var):
-        for chunk in self.chunks:
-            if isinstance(chunk, VarNameChunk) and chunk.value == var:
-                val_chunk = chunk.value_link
-                if val_chunk in self.chunks:
-                    return val_chunk.value
+        associated_val = [chunk.value_link for chunk in self.chunks if isinstance(chunk, VarNameChunk) and chunk.value == var]
+        if len(associated_val) > 0:
+            val_chunk = associated_val[0]
+            if val_chunk in self.chunks:
+                return val_chunk.value
+
+        unassociated_vals = [chunk for chunk in self.chunks if isinstance(chunk, VarValueChunk) and chunk.var_link not in self.chunks]
+        if len(unassociated_vals) > 0:
+            return choice(unassociated_vals).value
 
         return None
+
+    def decay(self):
+        self.maybe_forget(0.05)
+        self.maybe_swap(0.2)
 
 class ASTNode:
     pass
@@ -151,13 +178,16 @@ def trace_expr(expr, wm):
     elif isinstance(expr, Binop):
         left = trace_expr(expr.left, wm)
         right = trace_expr(expr.right, wm)
-        return expr.operator.eval(left, right)
+        result = expr.operator.eval(left, right)
+        return result
     else:
         raise Exception("Unreachable")
 
 def trace_stmt(stmt, wm):
     if isinstance(stmt, Assign):
-        wm.store_var_val(stmt.var, trace_expr(stmt.value, wm))
+        val = trace_expr(stmt.value, wm)
+        wm.decay()
+        wm.store_var_val(stmt.var, val)
     elif isinstance(stmt, Expr):
         print(trace_expr(stmt.value, wm))
         

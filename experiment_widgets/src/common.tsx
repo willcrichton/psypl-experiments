@@ -13,6 +13,7 @@ interface TrialStageProps<TrialData> {
   trial_finished: (results: any) => void
 }
 
+export
 interface TrialProps<TrialData> {
   trial: TrialData,
   finished: (results: any) => void
