@@ -33,3 +33,6 @@ class VariableArithmeticSequenceExperiment(BaseWidget):
 
 class VariableTracingExperiment(BaseWidget):
     _view_name = Unicode('VariableTracingView').tag(sync=True)
+
+class VariableTracingHardExperiment(BaseWidget):
+    _view_name = Unicode('VariableTracingHardView').tag(sync=True)
