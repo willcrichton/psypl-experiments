@@ -1,13 +1,10 @@
 from collections import defaultdict
 from pyro import distributions as dist
 from torch import tensor, sigmoid
-from lark import Lark, Token
-from dataclasses import dataclass
-from enum import Enum
-from typing import List, Any
 import torch
 import pyro
 import torch.distributions.constraints as constraints
+from grammar import *
 
 name_counters = defaultdict(int)
 def reset_name_counters():
@@ -118,121 +115,6 @@ class WorkingMemory:
     def decay(self):
         self.maybe_forget(0.05)
         self.maybe_swap(0.2)
-
-class ASTNode:
-    def children(self):
-        return []
-
-class NodeVisitor:
-    def on_visit(self, node):
-        name = node.__class__.__name__
-        visit_method = f'visit_{name}'
-        if hasattr(self, visit_method):
-            return getattr(self, visit_method)(node)
-
-    def on_leave(self, node):
-        name = node.__class__.__name__
-        leave_method = f'leave_{name}'
-        if hasattr(self, leave_method):
-            getattr(self, leave_method)(node)
-            
-    def visit(self, node):
-        recurse = self.on_visit(node) == None
-        if recurse:
-            for child in node.children():
-                self.visit(child)
-        self.on_leave(node)
-
-@dataclass
-class Number(ASTNode):
-    n: int
-        
-@dataclass        
-class Var(ASTNode):        
-    var: str
-        
-class BinaryOperator(Enum):        
-    Add = 1
-    Sub = 2
-
-    def eval(self, left, right):
-        if self == BinaryOperator.Add:
-            return left + right
-        elif self == BinaryOperator.Sub:
-            return left - right
-        
-    
-@dataclass
-class Binop(ASTNode):
-    operator: BinaryOperator
-    left: ASTNode
-    right: ASTNode
-
-    def children(self):
-        return [self.left, self.right]
-    
-@dataclass
-class Assign(ASTNode):
-    var: str
-    value: ASTNode
-
-    def children(self):
-        return [self.value]
-        
-@dataclass
-class Expr(ASTNode):
-    value: ASTNode
-
-    def children(self):
-        return [self.value]
-        
-@dataclass
-class Program(ASTNode):
-    statements: List[ASTNode]
-
-    def children(self):
-        return self.statements
-
-parser = Lark('''
-%import common.NUMBER 
-%import common.WS
-%import common.CNAME
-%ignore WS
-
-var: CNAME
-binop: "+" -> plus | "-" -> sub
-  
-expr: atom -> atom
-  | expr binop atom -> binop
-
-atom: CNAME -> var
-  | NUMBER -> number
-
-stmt: CNAME "=" expr -> assign 
-  | expr -> expr
-  
-prog: stmt*
-''', start='prog')
-
-def lark_tree_to_ast(t):
-    if isinstance(t, Token):
-        return t.value
-    
-    c = list(map(lark_tree_to_ast, t.children))
-    return {
-        'plus': lambda: BinaryOperator.Add,
-        'sub': lambda: BinaryOperator.Sub,
-        'prog': lambda: Program(c),
-        'assign': lambda: Assign(var=c[0], value=c[1]),
-        'binop': lambda: Binop(left=c[0], operator=c[1], right=c[2]),
-        'expr': lambda: Expr(value=c[0]),
-        'var': lambda: Var(var=c[0]),
-        'number': lambda: Number(n=int(c[0])),
-        'atom': lambda: c[0]
-    }[t.data]()
-
-def parse(s):
-    return lark_tree_to_ast(parser.parse(s))
 
 def guess_behavior(wm):
     return guess()

@@ -92,7 +92,7 @@ function make_multiple_trials<TrialData>(TrialView: React.ComponentType<TrialPro
       return <div>
         {this.state.exp_start ?
           (this.state.waiting ?
-            <span>Waiting for next trial...</span> :
+            <span>Preparing trial {this.state.trial_i+1}/{trials.length}...</span> :
             <TrialView trial={trials[this.state.trial_i]} finished={finished} />) :
           <button onClick={exp_start}>
             Click to start experiment

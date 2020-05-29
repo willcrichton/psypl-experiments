@@ -36,3 +36,6 @@ class VariableTracingExperiment(BaseWidget):
 
 class VariableTracingHardExperiment(BaseWidget):
     _view_name = Unicode('VariableTracingHardView').tag(sync=True)
+
+class VariableCuedRecallExperiment(BaseWidget):
+    _view_name = Unicode('VariableCuedRecallView').tag(sync=True)

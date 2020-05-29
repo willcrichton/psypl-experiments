@@ -13,7 +13,7 @@ from grammar import *
 from random import choice, choices
 import numpy as np
 from scipy.stats import wasserstein_distance
-import pyemd
+import experiment_widgets
 
 sns.set()
 pcache = PickleCache()
@@ -21,6 +21,7 @@ all_names = string.ascii_lowercase
 all_operators = ['+', '-']
 
 def earth_movers(p, q):
+    
     # TODO: what is the right distance?
     k = max(len(p), len(q))
     p = np.pad(p, (0, k-len(p)), mode='constant')
@@ -46,11 +47,11 @@ class Experiment:
     def eval_response(self, N_var, experiment, results):
         raise NotImplementedError
         
-    def process_results(self, N_var, N_trials):
-        data = pcache.get(self.exp_name(N_var, N_trials))
+    def process_results(self, N_var, N_trials, **kwargs):
+        data = pcache.get(self.exp_name(N_var, N_trials, **kwargs))
         experiment = data['experiment']
         results = data['results']
-        return self.eval_response(N_var, experiment, results)
+        return self.eval_response(N_var, experiment, results, **kwargs)
 
     def results(self):
         return pd.concat([self.process_results(N_var, 10) for N_var in self.all_exp])
@@ -165,24 +166,16 @@ class VariableSpanExperiment(Experiment):
         return response
 
     def simulation_loss(self, gt, sim):
-        def stats(df):
-            return df.groupby(['N_var', 'correct']).count().reset_index()
+        def dists(df):
+            return [
+                df[df.N_var == N_var].correct.tolist()
+                for N_var in sorted(df.N_var.unique())
+            ]
 
-        gt_s = stats(gt).reset_index()
-        sim_s = stats(sim).reset_index()
-        total_score = 0
-        for N_var in self.all_exp:
-            def prob_dist(df):
-                probs = np.zeros(N_var+1)
-                for _, row in df[df.N_var == N_var].iterrows():
-                    probs[int(row.correct)] = row.badvalue
-                return probs / probs.sum()        
-            
-            total_score += earth_movers(prob_dist(gt_s), prob_dist(sim_s))
-
-            # Used to use pointwise squared error, changed to earth mover's
-            # total_score += np.sum((prob_dist(gt_s) - prob_dist(sim_s)) ** 2)
-        return total_score
+        return sum([
+            wasserstein_distance(gt_dist, sim_dist)
+            for gt_dist, sim_dist in zip(dists(gt), dists(sim))
+        ])
 
     # deprecated
     def _summary_stats_simulation_loss(self, gt, sim):
@@ -194,6 +187,68 @@ class VariableSpanExperiment(Experiment):
         gt_mean, gt_std = stats(gt)
         sim_mean, sim_std = stats(sim)
         return ((gt_mean - sim_mean) ** 2).sum() + ((gt_std - sim_std) ** 2).sum()
+
+class VariableCuedRecallExperiment(Experiment):
+    all_exp = [3, 4, 5, 6]
+    all_participants = ['will']
+    num_to_recall = 2
+    num_trials = 20
+
+    def exp_name(self, N_var, N_trials, participant):
+        return f'cuedrecall2_{participant}_{N_var}_{N_trials}'
+
+    def results(self):
+        return pd.concat([self.process_results(N_var, self.num_trials, participant=participant) for participant in self.all_participants for N_var in self.all_exp])
+
+    def generate_trial(self, N):
+        names = sample(all_names, k=N)
+        return {
+            'variables': [
+                {'variable': names[i], 
+                 'value': randint(0, 9)}
+                for i in range(N)
+            ], 
+            'recall_variables': sample(names, k=self.num_to_recall),
+            'presentation_time': N * 1500
+        }
+
+    def eval_response(self, N_var, experiment, results, participant):
+        df = []
+        for (trial, result) in zip(experiment['trials'], results):
+            gt = {v['variable']: v['value'] for v in trial['variables']}
+            var_idx = {v['variable']: i for i, v in enumerate(trial['variables'])}
+            total = 0
+            for response in result['response']:
+                correct = 'value' in response and gt[response['variable']] == int(response['value'])
+                df.append({
+                    'correct': 1 if correct else 0,
+                    'var_idx': var_idx[response['variable']],
+                    'N_var': N_var,
+                    'participant': participant
+                })
+
+        return pd.DataFrame(df)
+
+    def generate_experiment(self, N_var, N_trials):
+        return {
+            'trials': [self.generate_trial(N_var) for _ in range(N_trials)],
+            'between_trials_time': 2000
+        }
+
+    def run_experiment(self, participant, N_var, N_trials=20):
+        exp_desc = self.generate_experiment(N_var=N_var, N_trials=N_trials)
+        exp = experiment_widgets.VariableCuedRecallExperiment(
+            experiment=json.dumps(exp_desc),
+            results='[]')
+        
+        def on_result_change(_):
+            pcache.set(self.exp_name(N_var, N_trials, participant), {
+                'experiment': exp_desc,
+                'results': json.loads(exp.results)
+            })
+
+        exp.observe(on_result_change)
+        return exp
 
 class VariableArithmeticExperiment(Experiment):
     all_exp = [2, 3, 4, 5]
@@ -241,15 +296,6 @@ class VariableArithmeticExperiment(Experiment):
             'expression_value': expr_value,
             'presentation_time': 500 + N * 1500
         }
-
-    def _mse_simulation_loss(self, gt, sim):
-        def stats(series):
-            g = series.groupby('N_var')
-            return g.mean().correct, g.std().correct
-
-        gt_mean, gt_std = stats(gt)
-        sim_mean, sim_std = stats(sim)
-        return ((gt_mean - sim_mean) ** 2).sum() + ((gt_std - sim_std) ** 2).sum()
 
     def simulate_trial(self, trial, model):
         wm = model()
@@ -344,26 +390,21 @@ class VariableSequenceExperiment(Experiment):
         return {'i': i, 'value': 0}      
 
     def simulation_loss(self, gt, sim):
-        def stats(df):
-            counts = df.groupby(['error', 'stage']).size()
-            hists = []
-            for val in counts.index.levels[0].values:
-                stage, count = unzip(counts[val].reset_index().values.tolist())
-                hist = np.zeros((np.max(stage)+1,))
-                hist[stage] = count
-                hist /= np.sum(hist)
-                hists.append(hist)
-            return hists
+        def dists(df):
+            return [
+                df[df.error == error].stage.tolist()
+                for error in sorted(df.error.unique())
+            ]
 
         def stats2(df):
-            counts = df.groupby(['error']).size() / len(df)
+            counts = df.groupby('error').size() / len(df)
             return counts.values.tolist()[0]
 
         mse_group_proportion = (stats2(gt) - stats2(sim)) ** 2
 
         return sum([
-            earth_movers(gt_prob, sim_prob)
-            for (gt_prob, sim_prob) in zip(stats(gt), stats(sim))
+            wasserstein_distance(gt_dist, sim_dist)
+            for (gt_dist, sim_dist) in zip(dists(gt), dists(sim))
         ]) + mse_group_proportion*10
 
     

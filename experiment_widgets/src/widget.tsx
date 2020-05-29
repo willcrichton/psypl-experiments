@@ -11,3 +11,4 @@ export {VariableArithmeticMemoryView} from './variable_arithmetic_memory';
 export {VariableArithmeticSequenceView} from './variable_arithmetic_sequence';
 export {VariableTracingView} from './variable_tracing';
 export {VariableTracingHardView} from './variable_tracing_hard';
+export {VariableCuedRecallView} from './variable_cued_recall';
