@@ -1,6 +1,6 @@
 import React from 'react';
 
-import {TrialStageProps, make_trial_sequence, make_multiple_trials, make_widget_view} from './common';
+import {TrialStageProps, make_trial_sequence, make_multiple_trials} from './common';
 
 interface TrialData {
   variables: {variable: string, value: string}[]
@@ -45,7 +45,4 @@ let input_stage = (props: TrialStageProps<TrialData>) => {
 }
 
 let TrialView = make_trial_sequence([code_stage, input_stage]);
-let VariableMemoryExperiment = make_multiple_trials<TrialData>(TrialView);
-
-export
-let VariableMemoryView = make_widget_view(VariableMemoryExperiment);
+export let VariableMemoryExperiment = make_multiple_trials<TrialData>(TrialView);

@@ -1,3 +1,24 @@
-.exp-input {
-    width: 30px;
+.experiment {
+    font-size: 18px;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+
+    .exp-input {
+        width: 30px;
+    }
+
+    .trial-counter {
+        font-size: 24px;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    .trial {
+        border: 1px solid #ccc;
+        padding: 10px;
+        min-height: 300px;
+    }
+
+    button { margin-top: 5px; }
+
+    pre { margin: 0; }
 }

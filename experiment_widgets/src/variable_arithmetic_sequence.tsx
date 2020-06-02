@@ -1,6 +1,6 @@
 import React from 'react';
 
-import {TrialStageProps, make_trial_generator, make_multiple_trials, make_widget_view} from './common';
+import {TrialStageProps, make_trial_generator, make_multiple_trials} from './common';
 
 
 interface TrialData {
@@ -37,9 +37,5 @@ let stage_generator = (i: number) => ({
 })
 
 let TrialView = make_trial_generator<TrialData, number>(stage_generator, 0);
-let VariableArithmeticSequenceExperiment =
+export let VariableArithmeticSequenceExperiment =
   make_multiple_trials<TrialData>(TrialView);
-
-export
-let VariableArithmeticSequenceView =
-  make_widget_view(VariableArithmeticSequenceExperiment);

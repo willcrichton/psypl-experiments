@@ -1,11 +1,13 @@
 const path = require('path');
 const version = require('./package.json').version;
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+const InlineChunkHtmlPlugin = require('react-dev-utils/InlineChunkHtmlPlugin');
 
 // Custom webpack rules
 const rules = [
-  { test: /\.tsx?$/, loader: 'ts-loader' },
+  { test: /\.tsx?$/, use: ['babel-loader', 'ts-loader'] },
   { test: /\.js$/, loader: 'source-map-loader' },
-  { test: /\.css$/, use: ['style-loader', 'css-loader']}
+  { test: /\.css$/, use: ['style-loader', 'css-loader', 'sass-loader']}
 ];
 
 // Packages that shouldn't be bundled but loaded at runtime
@@ -38,6 +40,26 @@ module.exports = [
     resolve,
   },
 
+  {
+    entry: './src/turk.tsx',
+    output: {
+      filename: 'turk.js',
+      libraryTarget: 'var'
+    },
+    module: {
+      rules: rules
+    },
+    plugins: [
+      new HtmlWebpackPlugin({
+        template: 'src/turk.html',
+        inject: true,
+        filename: 'turk.html'
+      }),
+      new InlineChunkHtmlPlugin(HtmlWebpackPlugin, [/turk.js/]),
+    ],
+    resolve,
+  },
+
   /**
    * Embeddable experiment_widgets bundle
    *
@@ -49,17 +71,17 @@ module.exports = [
    * the custom widget embedder.
    */
   {
-    entry: './src/index.tsx',
+    entry: './src/index.ts',
     output: {
-        filename: 'index.js',
-        path: path.resolve(__dirname, 'dist'),
-        libraryTarget: 'amd',
-        library: "experiment_widgets",
-        publicPath: 'https://unpkg.com/experiment_widgets@' + version + '/dist/'
+      filename: 'index.js',
+      path: path.resolve(__dirname, 'dist'),
+      libraryTarget: 'amd',
+      library: "experiment_widgets",
+      publicPath: 'https://unpkg.com/experiment_widgets@' + version + '/dist/'
     },
     devtool: 'source-map',
     module: {
-        rules: rules
+      rules: rules
     },
     externals,
     resolve,
@@ -72,7 +94,7 @@ module.exports = [
    * This bundle is used to embed widgets in the package documentation.
    */
   {
-    entry: './src/index.tsx',
+    entry: './src/index.ts',
     output: {
       filename: 'embed-bundle.js',
       path: path.resolve(__dirname, 'docs', 'source', '_static'),

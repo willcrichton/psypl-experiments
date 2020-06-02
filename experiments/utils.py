@@ -94,16 +94,14 @@ class Experiment:
 
 
     def simulate_trials(self, N_var, N_trials, model):
-        experiment = {
-            'trials': [self.generate_trial(N_var) for _ in range(N_trials)]
-        }
+        experiment = self.generate_experiment(N_var, N_trials)
 
         response = [
             {'response': self.simulate_trial(trial, model)} 
             for trial in experiment['trials']
         ]
 
-        return self.eval_response(N_var, experiment, response)
+        return self.eval_response(N_var, experiment, response, participant='simulation')
 
     def simulate(self, model, N_trials=1000):
         return pd.concat([
@@ -117,6 +115,11 @@ class VariableSpanExperiment(Experiment):
 
     def exp_name(self, N_var, N_trials):
         return f'varmem_{N_var}_{N_trials}'
+
+    def generate_experiment(self, N_var, N_trials=10):
+        return {
+            'trials': [self.generate_trial(N_var) for _ in range(N_trials)]
+        }
 
     def generate_trial(self, N):
         names = sample(all_names, k=N)
@@ -235,20 +238,48 @@ class VariableCuedRecallExperiment(Experiment):
             'between_trials_time': 2000
         }
 
-    def run_experiment(self, participant, N_var, N_trials=20):
+    def run_experiment(self, participant, N_var, N_trials=20, dummy=False):
         exp_desc = self.generate_experiment(N_var=N_var, N_trials=N_trials)
         exp = experiment_widgets.VariableCuedRecallExperiment(
             experiment=json.dumps(exp_desc),
             results='[]')
         
         def on_result_change(_):
-            pcache.set(self.exp_name(N_var, N_trials, participant), {
-                'experiment': exp_desc,
-                'results': json.loads(exp.results)
-            })
+            if not dummy:
+                pcache.set(self.exp_name(N_var, N_trials, participant), {
+                    'experiment': exp_desc,
+                    'results': json.loads(exp.results)
+                })
 
         exp.observe(on_result_change)
         return exp
+
+    def simulate_trial(self, trial, model):
+        wm = model()
+        for v in trial['variables']:
+            wm.store(v['variable'], v['value'])
+        values = [v['value'] for v in trial['variables']]
+
+        response = []
+        for v in trial['recall_variables']:
+            value = wm.load(v) 
+            if value is None:
+                value = choice(values)
+            response.append({'variable': v, 'value': value})
+
+        return response
+
+    def simulation_loss(self, gt, sim):
+        def dists(df):
+            return [
+                df[df.N_var == N_var].correct.tolist()
+                for N_var in sorted(df.N_var.unique())
+            ]
+
+        return sum([
+            wasserstein_distance(gt_dist, sim_dist)
+            for gt_dist, sim_dist in zip(dists(gt), dists(sim))
+        ])
 
 class VariableArithmeticExperiment(Experiment):
     all_exp = [2, 3, 4, 5]
@@ -256,7 +287,7 @@ class VariableArithmeticExperiment(Experiment):
     def exp_name(self, N_var, N_trials):
         return f'vararithmem_{N_var}_{N_trials}'    
 
-    def eval_response(self, N_var, experiment, results):
+    def eval_response(self, N_var, experiment, results, participant=None):
         rows = []
         for (trial, result) in zip(experiment['trials'], results):
             try:

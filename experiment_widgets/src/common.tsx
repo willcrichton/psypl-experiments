@@ -1,10 +1,5 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
-
-import {
-  DOMWidgetView,
-  DOMWidgetModel
-} from '@jupyter-widgets/base';
+import '../css/widget.css';
 
 export
 interface TrialStageProps<TrialData> {
@@ -19,8 +14,10 @@ interface TrialProps<TrialData> {
   finished: (results: any) => void
 }
 
+export
 interface MultipleTrialsProps<TrialData> {
-  model: DOMWidgetModel,
+  save_results: (results: any) => void,
+  on_finished: () => void,
   trials: TrialData[],
   between_trials_time: number
 }
@@ -64,52 +61,36 @@ function make_trial_generator<TrialData, TrialState>(gen_view: StageGenerator<Tr
 
 export
 function make_multiple_trials<TrialData>(TrialView: React.ComponentType<TrialProps<TrialData>>) {
-  return class extends React.Component<MultipleTrialsProps<TrialData>, {trial_i: number, exp_start: boolean, waiting: boolean}> {
-    state = {exp_start: false, trial_i: 0, waiting: false}
+  return class extends React.Component<MultipleTrialsProps<TrialData>, {trial_i: number, waiting: boolean}> {
+    state = {trial_i: 0, waiting: false}
 
     render() {
-      let {model, trials, between_trials_time} = this.props;
+      let {trials, between_trials_time, save_results, on_finished} = this.props;
 
       let finished = (results: any) => {
-        let all_results = JSON.parse(model.get('results'));
-        all_results.push(results);
-        model.set('results', JSON.stringify(all_results));
-        model.save_changes();
+        save_results(results);
 
         this.setState({waiting: true});
         setTimeout(() => {
-          this.setState({trial_i: this.state.trial_i + 1, waiting: false});
-        }, between_trials_time);
-      };
-
-      let exp_start = () => {
-        this.setState({exp_start: true, waiting: true})
-        setTimeout(() => {
-          this.setState({waiting: false});
+          if (this.state.trial_i == trials.length - 1) {
+            on_finished();
+          } else {
+            this.setState({trial_i: this.state.trial_i + 1, waiting: false});
+          }
         }, between_trials_time);
       };
 
       return <div>
-        {this.state.exp_start ?
-          (this.state.waiting ?
-            <span>Preparing trial {this.state.trial_i+1}/{trials.length}...</span> :
-            <TrialView trial={trials[this.state.trial_i]} finished={finished} />) :
-          <button onClick={exp_start}>
-            Click to start experiment
-          </button>}
+        <div className='trial-counter'>
+          Trial {this.state.trial_i+1}/{trials.length}
+        </div>
+        <div className='trial'>
+          {this.state.waiting ?
+            <span>Preparing next trial...</span> :
+            <TrialView trial={trials[this.state.trial_i]}
+                       finished={finished} />}
+        </div>
       </div>
-    }
-  }
-}
-
-export function make_widget_view(View: any): any {
-  return class extends DOMWidgetView {
-    render() {
-      this.model.on('change', () => {this.touch();});
-      let props = JSON.parse(this.model.get('experiment'));
-      ReactDOM.render(
-        <View model={this.model} {...props} />,
-        this.el);
     }
   }
 }

@@ -1,6 +1,6 @@
 import React from 'react';
 
-import {TrialProps, make_multiple_trials, make_widget_view} from './common';
+import {TrialProps, make_multiple_trials} from './common';
 
 interface TrialData {
   variables: {variable: string, value: number}[]
@@ -69,9 +69,5 @@ class TrialView extends React.Component<TrialProps<TrialData>, {var_screen: bool
   }
 }
 
-let VariableTracingExperiment =
+export let VariableTracingExperiment =
   make_multiple_trials<TrialData>(TrialView);
-
-export
-let VariableTracingView =
-  make_widget_view(VariableTracingExperiment);

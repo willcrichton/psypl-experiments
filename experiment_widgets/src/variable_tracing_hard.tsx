@@ -1,6 +1,6 @@
 import React from 'react';
 
-import {TrialProps, make_multiple_trials, make_widget_view} from './common';
+import {TrialProps, make_multiple_trials} from './common';
 
 interface TrialData {
   prog: string
@@ -29,9 +29,5 @@ let trial_view = (props: TrialProps<TrialData>) => {
 };
 
 
-let VariableTracingHardExperiment =
+export let VariableTracingHardExperiment =
   make_multiple_trials<TrialData>(trial_view);
-
-export
-let VariableTracingHardView =
-  make_widget_view(VariableTracingHardExperiment);
