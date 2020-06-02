@@ -1,4 +1,4 @@
 {
-  "plugins": ["@babel/plugin-transform-template-literals"],
+  "plugins": ["lodash", "@babel/plugin-transform-template-literals"],
   "presets": ["@babel/preset-env"]
 }

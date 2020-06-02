@@ -22,3 +22,5 @@
 
     pre { margin: 0; }
 }
+
+#submitButton { display: none; }

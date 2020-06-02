@@ -62,35 +62,72 @@ function make_trial_generator<TrialData, TrialState>(gen_view: StageGenerator<Tr
 export
 function make_multiple_trials<TrialData>(TrialView: React.ComponentType<TrialProps<TrialData>>) {
   return class extends React.Component<MultipleTrialsProps<TrialData>, {trial_i: number, waiting: boolean}> {
-    state = {trial_i: 0, waiting: false}
+    state = {trial_i: -1, waiting: true}
+
+    next_trial() {
+      this.setState({waiting: true});
+      setTimeout(() => {
+        if (this.state.trial_i == this.props.trials.length - 1) {
+          this.props.on_finished();
+        } else {
+          this.setState({trial_i: this.state.trial_i + 1, waiting: false});
+        }
+      }, this.props.between_trials_time);
+    };
+
+    componentDidMount() {
+      this.next_trial();
+    }
 
     render() {
-      let {trials, between_trials_time, save_results, on_finished} = this.props;
-
       let finished = (results: any) => {
-        save_results(results);
-
-        this.setState({waiting: true});
-        setTimeout(() => {
-          if (this.state.trial_i == trials.length - 1) {
-            on_finished();
-          } else {
-            this.setState({trial_i: this.state.trial_i + 1, waiting: false});
-          }
-        }, between_trials_time);
+        this.props.save_results(results);
+        this.next_trial();
       };
 
       return <div>
         <div className='trial-counter'>
-          Trial {this.state.trial_i+1}/{trials.length}
+          Trial {this.state.trial_i+1}/{this.props.trials.length}
         </div>
         <div className='trial'>
           {this.state.waiting ?
             <span>Preparing next trial...</span> :
-            <TrialView trial={trials[this.state.trial_i]}
+            <TrialView trial={this.props.trials[this.state.trial_i]}
                        finished={finished} />}
         </div>
       </div>
     }
   }
+}
+
+
+export let chars = 'abcdefghijklmnopqrstuvwxyz'.split('');
+export let digits = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+
+export function sample<T>(l: T[]): T {
+  const i = Math.floor(Math.random() * l.length);
+  return l[i];
+};
+
+export function range(i: number): number[] {
+  return [...Array(i).keys()];
+}
+
+function shuffle<T>(array: T[]) {
+  var i = 0
+    , j = 0
+    , temp = null
+
+  for (i = array.length - 1; i > 0; i -= 1) {
+    j = Math.floor(Math.random() * (i + 1))
+    temp = array[i]
+    array[i] = array[j]
+    array[j] = temp
+  }
+}
+
+export function sample_many<T>(l: T[], k: number): T[] {
+  let idxs = range(l.length);
+  shuffle(idxs);
+  return range(k).map((i) => l[idxs[i]]);
 }

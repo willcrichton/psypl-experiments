@@ -1,6 +1,6 @@
 import React from 'react';
 
-import {TrialStageProps, make_trial_sequence, make_multiple_trials} from './common';
+import {TrialStageProps, make_trial_sequence, make_multiple_trials, digits, chars, range, sample_many} from './common';
 
 interface TrialData {
   variables: {variable: string, value: string}[]
@@ -69,7 +69,7 @@ export let Explanation = (props: any) => {
     <p>This is an experiment to test your memory for lists of letters and numbers. You will be presented with letter/number pairs like this:</p>
 
     <pre>
-{`x = 4
+      {`x = 4
 q = 8
 r = 2`}</pre>
 
@@ -81,4 +81,31 @@ r = 2`}</pre>
 
     <p><button onClick={props.start}>Start the experiment</button></p>
   </div>;
+};
+
+
+export let generate_experiment = () => {
+  let trial_counts = [[2, 2], [3, 3], [4, 5], [5, 5], [6, 5]];
+  let trials =
+    trial_counts.map(([N_var, N_trials]) =>
+      range(N_trials).map((i) => {
+        let names = sample_many(chars, N_var);
+        let values = sample_many(digits, N_var);
+        let variables = range(N_var).map((j) => ({
+          variable: names[j],
+          value: values[j].toString()
+        }));
+        let recall_variables = sample_many(names, 2);
+
+        return {
+          variables,
+          recall_variables,
+          presentation_time: N_var * 1500
+        };
+      })).flat();
+
+  return {
+    trials,
+    between_trials_time: 2000
+  };
 };

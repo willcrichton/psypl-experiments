@@ -1,18 +1,13 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-import {VariableCuedRecallExperiment, Explanation} from './variable_cued_recall';
+import {VariableCuedRecallExperiment, Explanation, generate_experiment} from './variable_cued_recall';
 
-let experiment_desc = `{"trials": [{"variables": [{"variable": "k", "value": 2}, {"variable": "t", "value": 6}, {"variable": "p", "value": 3}], "recall_variables": ["p", "k"], "presentation_time": 4500}], "between_trials_time": 2000}`;
-
-let save_results = (results: any) => {
-  console.log(results);
-}
-
-let props = JSON.parse(experiment_desc);
+let experiment = generate_experiment();
 
 class Experiment extends React.Component {
   state = { started: false, finished: false }
+  results: any = null
 
   render() {
     let start = () => {this.setState({started: true})};
@@ -23,12 +18,16 @@ class Experiment extends React.Component {
         </div>
         : (!this.state.finished
           ? <VariableCuedRecallExperiment
-              save_results={save_results}
+              save_results={(results: any) => {this.results = results;}}
               on_finished={() => {this.setState({finished: true})}}
-              {...props} />
+              {...experiment} />
           : <div>
             <p>The experiment is complete. Thank you for your participation!</p>
-            <p><input type="submit" value="Click here to conclude the HIT"/></p>
+            <p>
+              <input type="submit" value="Click here to conclude the HIT"/>
+              <input type="hidden" name="experiment" value={JSON.stringify(experiment)} />
+              <input type="hidden" name="results" value={JSON.stringify(this.results)} />
+            </p>
           </div>)
     }</div>;
   }
