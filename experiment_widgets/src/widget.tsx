@@ -67,3 +67,6 @@ export let VariableTracingHardView = make_widget_view(VariableTracingHardExperim
 
 import {VariableCuedRecallExperiment} from './variable_cued_recall';
 export let VariableCuedRecallView = make_widget_view(VariableCuedRecallExperiment);
+
+import {FunctionBasicExperiment} from './function_basic';
+export let FunctionBasicView = make_widget_view(FunctionBasicExperiment);

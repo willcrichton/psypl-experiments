@@ -1,6 +1,6 @@
 import React from 'react';
 
-import {TrialStageProps, make_trial_generator, make_multiple_trials} from './common';
+import {TrialStageProps, make_trial_generator, make_multiple_trials, ValueInput} from './common';
 
 
 interface TrialData {
@@ -13,10 +13,9 @@ let stage_generator = (i: number) => ({
   view: (props: TrialStageProps<TrialData>) => {
     let trial = props.trial;
     let variable = trial.variables[i];
-    let ref = React.createRef<HTMLInputElement>();
 
-    let next_stage = () => {
-      let response = parseInt(ref.current!.value);
+    let next_stage = (value: string) => {
+      let response = parseInt(value);
       if (response == variable.value) {
         setTimeout(() => {
           props.next_stage();
@@ -30,8 +29,7 @@ let stage_generator = (i: number) => ({
 
     return <div>
       <pre>{variable.variable} = {variable.expression}</pre>
-      <input type="text" className="exp-input" ref={ref} />
-      <button onClick={next_stage}>Next</button>
+      <ValueInput onEnter={(value) => next_stage(value)} />
     </div>;
   }
 })

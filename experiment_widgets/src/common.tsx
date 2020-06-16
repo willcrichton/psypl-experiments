@@ -1,6 +1,10 @@
 import React from 'react';
 import '../css/widget.css';
 
+function now(): number {
+  return new Date().getTime();
+}
+
 export
 interface TrialStageProps<TrialData> {
   trial: TrialData,
@@ -61,8 +65,8 @@ function make_trial_generator<TrialData, TrialState>(gen_view: StageGenerator<Tr
 
 export
 function make_multiple_trials<TrialData>(TrialView: React.ComponentType<TrialProps<TrialData>>) {
-  return class extends React.Component<MultipleTrialsProps<TrialData>, {trial_i: number, waiting: boolean}> {
-    state = {trial_i: -1, waiting: true}
+  return class extends React.Component<MultipleTrialsProps<TrialData>, {trial_i: number, waiting: boolean, start_time: number}> {
+    state = {trial_i: -1, waiting: true, start_time: 0}
 
     next_trial() {
       this.setState({waiting: true});
@@ -70,7 +74,11 @@ function make_multiple_trials<TrialData>(TrialView: React.ComponentType<TrialPro
         if (this.state.trial_i == this.props.trials.length - 1) {
           this.props.on_finished();
         } else {
-          this.setState({trial_i: this.state.trial_i + 1, waiting: false});
+          this.setState({
+            trial_i: this.state.trial_i + 1,
+            waiting: false,
+            start_time: now()
+          });
         }
       }, this.props.between_trials_time);
     };
@@ -81,6 +89,7 @@ function make_multiple_trials<TrialData>(TrialView: React.ComponentType<TrialPro
 
     render() {
       let finished = (results: any) => {
+        results['trial_time'] = now() - this.state.start_time;
         this.props.save_results(results);
         this.next_trial();
       };
@@ -130,4 +139,16 @@ export function sample_many<T>(l: T[], k: number): T[] {
   let idxs = range(l.length);
   shuffle(idxs);
   return range(k).map((i) => l[idxs[i]]);
+}
+
+export function ValueInput(props: {onEnter: (s: string) => void}) {
+  return (
+    <input type="text"
+           className="exp-input"
+                autoFocus={true}
+           onKeyPress={(e) => {
+             if (e.key == 'Enter') {
+               props.onEnter((e.target as HTMLInputElement).value);
+             }}} />
+  );
 }

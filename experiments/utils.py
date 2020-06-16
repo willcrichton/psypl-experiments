@@ -10,15 +10,39 @@ from tqdm.auto import tqdm
 from iterextras import par_for, unzip
 import hyperopt
 from grammar import *
-from random import choice, choices
+from random import choice, choices, random
 import numpy as np
 from scipy.stats import wasserstein_distance
 import experiment_widgets
+from enum import Enum
 
 sns.set()
 pcache = PickleCache()
-all_names = string.ascii_lowercase
+all_names = list(set(string.ascii_lowercase) - set(['l', 'i']))
 all_operators = ['+', '-']
+
+def shuffle(l):
+    return sample(l, k=len(l))
+
+def shuffle_unique(l):
+    while True:
+        l2 = shuffle(l)
+        if l2 != l:
+            return l2
+
+def try_int(s):
+    try:
+        return int(s)
+    except ValueError:
+        return None
+
+def interleave(base, sep):
+    l = []
+    for i in range(len(base)):
+        if i > 0:
+            l.append(sep[i-1])
+        l.append(base[i])
+    return ' '.join(l)
 
 def earth_movers(p, q):
     
@@ -109,6 +133,232 @@ class Experiment:
             for N_var in self.all_exp
         ])
 
+    def run_experiment(self, participant, N_var, N_trials=20, dummy=False):
+        exp_desc = self.generate_experiment(N_var=N_var, N_trials=N_trials)
+        exp = self.Widget(
+            experiment=json.dumps(exp_desc),
+            results='[]')
+        
+        def on_result_change(_):
+            if not dummy:
+                pcache.set(self.exp_name(N_var, N_trials, participant), {
+                    'experiment': exp_desc,
+                    'results': json.loads(exp.results)
+                })
+
+        exp.observe(on_result_change)
+        return exp
+
+class FunctionBasicExperiment(Experiment):
+    Widget = experiment_widgets.FunctionBasicExperiment
+    all_exp = [2, 3, 4]
+    all_participants = ['will']
+    num_trials = 40
+
+    class Condition(Enum):
+        NoFunction = 1
+        SimpleFunction = 2
+        RenameArgsFunction = 3
+        RandomOrderFunction = 4
+
+    def exp_name(self, N_var, N_trials, participant):
+        return f'function_basic_{participant}_{N_var}'
+
+    def results(self):
+        return pd.concat([self.process_results(N_var, self.num_trials, participant=participant) 
+                          for participant in self.all_participants for N_var in self.all_exp])
+
+    def generate_experiment(self, N_var, N_trials=30):
+        conditions = list(self.Condition)
+        n_conditions = len(conditions)
+
+        return {
+            'trials': shuffle([
+                self.generate_trial(N_var, cond)
+                for cond in conditions
+                for _ in range(N_trials // len(conditions))
+            ]),
+            'between_trials_time': 2000
+        }
+
+    def generate_trial(self, N_var, condition):
+        names = sample(all_names, k=N_var*2)
+        var_names, func_names = names[:N_var], names[N_var:]
+         
+        def gen_expr(i):
+            possible_names = var_names[:i-1]
+
+            def gen_op():
+                if len(possible_names) > 0:
+                    name = choice(possible_names)
+                    return name, set(name)
+                else:
+                    return randint(1, 9), set()
+
+            if i == 0:
+                return randint(1, 9), set()
+            else:
+                lhs = var_names[i-1]
+                free = set(lhs)
+                if i > 1:
+                    rhs = choice(var_names[:i-1])
+                    free.add(rhs)
+                else:
+                    rhs = randint(1, 9)
+
+                op = choice(all_operators)
+                expr = f'{lhs} {op} {rhs}' if choice([True, False]) else f'{rhs} {op} {lhs}'
+                return expr, free
+
+        def gen_func(i, condition):
+            expr, free = gen_expr(i)
+            free = list(free)
+
+            if condition == self.Condition.SimpleFunction:
+                func_args = free
+                call_args = free
+            else:
+                all_free = set([func_names[i]] + free)
+                func_args = sample(list(set(all_names) - all_free), k=len(free))
+                for (old, new) in zip(free, func_args):
+                    expr = expr.replace(old, new)
+                
+                if condition == self.Condition.RenameArgsFunction:
+                    call_args = free
+                elif condition == self.Condition.RandomOrderFunction:
+                    permutation = shuffle(list(range(len(func_args))))
+                    func_args = [func_args[i] for i in permutation]
+                    call_args = [free[i] for i in permutation]
+
+            fbody = f'def {func_names[i]}({",".join(func_args)}):\n    return {expr}'
+            fcall = f'{var_names[i]} = {func_names[i]}({",".join(call_args)})'
+            return fcall, fbody
+
+        final_expr, _ = gen_expr(N_var)
+        if condition == self.Condition.NoFunction:
+            program = '\n'.join([
+                f'{var_names[i]} = {gen_expr(i)[0]}'
+                for i in range(N_var)
+            ] + [final_expr])
+        else:
+            calls, bodies = unzip([
+                gen_func(i, condition) 
+                for i in range(N_var)
+            ])
+            bodies = sample(bodies, k=len(bodies))
+            program = '\n'.join(bodies) + '\n\n' + '\n'.join(calls + [final_expr])
+
+        globls = {}
+        exec(program, globls, globls)
+                            
+        return {'program': program, 'condition': str(condition), 
+                'answer': eval(final_expr, globls, globls)}
+
+    def eval_response(self, N_var, experiment, results, participant):
+        df = []
+        for (trial, result) in zip(experiment['trials'], results):
+            df.append({
+                'participant': participant,
+                'N_var': N_var,
+                'correct': trial['answer'] == try_int(result['response']),
+                'response_time': result['trial_time'],
+                'condition': trial['condition'].split('.')[1]
+            })
+        return pd.DataFrame(df)
+
+
+class FunctionArgsExperiment(Experiment):
+    Widget = experiment_widgets.FunctionBasicExperiment
+    all_exp = [2, 3, 4]
+    all_participants = ['will']
+
+    class CallCondition(Enum):
+        Constant = 1
+        Variable = 2
+        Shuffled = 3
+
+    class FuncCondition(Enum):
+        Ordered = 1
+        Shuffled = 2
+
+    def exp_name(self, N_var, N_trials, participant):
+        return f'function_args_{participant}_{N_var}'
+
+    def results(self):
+        return pd.concat([self.process_results(N_var, 0, participant=participant) 
+                          for participant in self.all_participants for N_var in self.all_exp])
+
+    def generate_experiment(self, N_var, N_trials=30):
+        conditions = list(itertools.product(self.CallCondition, self.FuncCondition))
+        n_conditions = len(conditions)
+
+        return {
+            'trials': shuffle([
+                self.generate_trial(N_var, *conds)
+                for conds in conditions
+                for _ in range(N_trials // n_conditions)
+            ]),
+            'between_trials_time': 2000
+        }
+
+    def generate_trial(self, N_var, call_cond, func_cond):
+        names = sample(all_names, k=N_var*2+1)
+        arg_names = names[:N_var]
+        func_name = names[-1]
+        values = [str(randint(1, 9)) for _ in range(N_var)]
+
+        if call_cond == self.CallCondition.Constant:
+            decls = ''
+            fcall = f'{func_name}({", ".join(values)})'
+            call_args = values
+        else: 
+            vrs = names[N_var:-1]
+            decls = '\n'.join([f'{var} = {value}' for var, value in zip(vrs, values)])
+            if call_cond == self.CallCondition.Variable:
+                call_args = vrs
+            elif call_cond == self.CallCondition.Shuffled:
+                call_args = shuffle_unique(vrs)
+            else:
+                raise Exception(call_cond)
+    
+        #ops = choices(all_operators, k=N_var-1)
+        ops = shuffle(['-'] + sample(all_operators, k=N_var-2))
+        expr = interleave(arg_names, ops)
+        if func_cond == self.FuncCondition.Ordered:
+            func_args = arg_names
+        elif func_cond == self.FuncCondition.Shuffled:
+            func_args = shuffle_unique(arg_names)
+        else:
+            raise Exception(func_cond)
+
+        fbody = f'def {func_name}({",".join(func_args)}):\n    return {expr}'
+        fcall = f'{func_name}({", ".join(call_args)})'
+        
+        program = fbody + '\n\n' + decls + '\n' + fcall
+        globls = {}
+        exec(program, globls, globls)
+        answer = eval(fcall, globls, globls)
+
+        return {
+            'program': program,
+            'call_cond': str(call_cond),
+            'func_cond': str(func_cond),
+            'answer': answer
+        }
+
+
+    def eval_response(self, N_var, experiment, results, participant):
+        df = []
+        for (trial, result) in zip(experiment['trials'], results):
+            df.append({
+                'participant': participant,
+                'N_var': N_var,
+                'correct': trial['answer'] == int(result['response']),
+                'response_time': result['trial_time'],
+                'call_cond': trial['call_cond'],
+                'func_cond': trial['func_cond']
+            })
+        return pd.DataFrame(df)
 
 class VariableSpanExperiment(Experiment):
     all_exp = [3, 4, 5, 6]
@@ -196,6 +446,7 @@ class VariableCuedRecallExperiment(Experiment):
     all_participants = ['will']
     num_to_recall = 2
     num_trials = 20
+    Widget = experiment_widgets.VariableCuedRecallExperiment
 
     def exp_name(self, N_var, N_trials, participant):
         return f'cuedrecall2_{participant}_{N_var}_{N_trials}'
@@ -220,15 +471,15 @@ class VariableCuedRecallExperiment(Experiment):
         for (trial, result) in zip(experiment['trials'], results):
             gt = {v['variable']: v['value'] for v in trial['variables']}
             var_idx = {v['variable']: i for i, v in enumerate(trial['variables'])}
-            total = 0
-            for response in result['response']:
-                correct = 'value' in response and gt[response['variable']] == int(response['value'])
-                df.append({
-                    'correct': 1 if correct else 0,
-                    'var_idx': var_idx[response['variable']],
-                    'N_var': N_var,
-                    'participant': participant
-                })
+            correct = sum([
+                1 if 'value' in response and gt[response['variable']] == int(response['value']) else 0
+                for response in result['response']
+            ])
+            df.append({
+                'correct': correct,
+                'N_var': N_var,
+                'participant': participant
+            })
 
         return pd.DataFrame(df)
 
@@ -237,22 +488,6 @@ class VariableCuedRecallExperiment(Experiment):
             'trials': [self.generate_trial(N_var) for _ in range(N_trials)],
             'between_trials_time': 2000
         }
-
-    def run_experiment(self, participant, N_var, N_trials=20, dummy=False):
-        exp_desc = self.generate_experiment(N_var=N_var, N_trials=N_trials)
-        exp = experiment_widgets.VariableCuedRecallExperiment(
-            experiment=json.dumps(exp_desc),
-            results='[]')
-        
-        def on_result_change(_):
-            if not dummy:
-                pcache.set(self.exp_name(N_var, N_trials, participant), {
-                    'experiment': exp_desc,
-                    'results': json.loads(exp.results)
-                })
-
-        exp.observe(on_result_change)
-        return exp
 
     def simulate_trial(self, trial, model):
         wm = model()
@@ -339,9 +574,13 @@ class VariableArithmeticExperiment(Experiment):
 
 class VariableSequenceExperiment(Experiment):
     all_exp = [0]
+    Widget = experiment_widgets.VariableArithmeticSequenceExperiment
 
-    def exp_name(self, N_var, N_trials):
+    def exp_name(self, N_var, N_trials, participant=None):
         return f'vararithseq_{N_trials}'
+
+    def results(self):
+        return pd.concat([self.process_results(N_var, 20) for N_var in self.all_exp])
 
     def generate_expression(self, variables):
         if len(variables) == 0:
@@ -359,6 +598,12 @@ class VariableSequenceExperiment(Experiment):
             expression = f"{lhs['variable']} {op} {rhs['variable']}"
             value = eval(f"{lhs['value']} {op} {rhs['value']}")
             return expression, value
+
+    def generate_experiment(self, N_var, N_trials):
+        return {
+            'trials': [self.generate_trial(N_var) for _ in range(N_trials)],
+            'between_trials_time': 1000
+        }
 
     def generate_trial(self, _):
         K = 10
