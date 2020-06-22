@@ -15,6 +15,8 @@ import numpy as np
 from scipy.stats import wasserstein_distance
 import experiment_widgets
 from enum import Enum
+from dataclasses import dataclass
+from copy import deepcopy
 
 sns.set()
 pcache = PickleCache()
@@ -29,6 +31,9 @@ def shuffle_unique(l):
         l2 = shuffle(l)
         if l2 != l:
             return l2
+
+def rand_const():
+    return randint(1, 9)
 
 def try_int(s):
     try:
@@ -138,13 +143,16 @@ class Experiment:
         exp = self.Widget(
             experiment=json.dumps(exp_desc),
             results='[]')
+
+        pkey = self.exp_name(N_var, N_trials, participant)
+        prev_results = pcache.get(pkey, lambda: {'experiment': {**exp_desc, 'trials': []}, 'results': []})
         
         def on_result_change(_):
             if not dummy:
-                pcache.set(self.exp_name(N_var, N_trials, participant), {
-                    'experiment': exp_desc,
-                    'results': json.loads(exp.results)
-                })
+                prev_copy = deepcopy(prev_results)
+                prev_copy['experiment']['trials'].extend(exp_desc['trials'])
+                prev_copy['results'].extend(json.loads(exp.results))
+                pcache.set(pkey, prev_copy)
 
         exp.observe(on_result_change)
         return exp
@@ -193,10 +201,10 @@ class FunctionBasicExperiment(Experiment):
                     name = choice(possible_names)
                     return name, set(name)
                 else:
-                    return randint(1, 9), set()
+                    return rand_const(), set()
 
             if i == 0:
-                return randint(1, 9), set()
+                return rand_const(), set()
             else:
                 lhs = var_names[i-1]
                 free = set(lhs)
@@ -204,7 +212,7 @@ class FunctionBasicExperiment(Experiment):
                     rhs = choice(var_names[:i-1])
                     free.add(rhs)
                 else:
-                    rhs = randint(1, 9)
+                    rhs = rand_const()
 
                 op = choice(all_operators)
                 expr = f'{lhs} {op} {rhs}' if choice([True, False]) else f'{rhs} {op} {lhs}'
@@ -305,7 +313,7 @@ class FunctionArgsExperiment(Experiment):
         names = sample(all_names, k=N_var*2+1)
         arg_names = names[:N_var]
         func_name = names[-1]
-        values = [str(randint(1, 9)) for _ in range(N_var)]
+        values = [str(rand_const()) for _ in range(N_var)]
 
         if call_cond == self.CallCondition.Constant:
             decls = ''
@@ -393,7 +401,7 @@ class FunctionAlignExperiment(Experiment):
         names = sample(all_names, k=N_var+1)
         arg_names = names[:N_var]
         func_name = names[-1]
-        values = [str(randint(1, 9)) for _ in range(N_var)]
+        values = [str(rand_const()) for _ in range(N_var)]
 
         call_args = values
         ops = shuffle(['-'] + choices(all_operators, k=N_var-2))
@@ -430,6 +438,97 @@ class FunctionAlignExperiment(Experiment):
                 'cond': trial['cond'],
             })
         return pd.DataFrame(df)
+
+
+class FunctionDepthExperiment(FunctionAlignExperiment):
+    all_exp = [4, 5, 6]
+
+    class Condition(Enum):
+        Parentheses = 1
+        Variable = 2
+        Preorder = 3
+        Random = 4
+        
+    @dataclass
+    class ConstNode:
+        value: int
+
+        def to_paren_str(self):
+            return str(self.value)
+
+        def to_func_str(self, _):
+            return [], str(self.value)
+
+        def to_variable_str(self, _):
+            return [], str(self.value)
+            
+    @dataclass
+    class OpNode:
+        left: 'Node'
+        right: 'Node'
+        op: str
+
+        def to_paren_str(self):
+            return f'({self.left.to_paren_str()} {self.op} {self.right.to_paren_str()})'
+
+        def to_variable_str(self, fresh):
+            ldefs, lvar = self.left.to_variable_str(fresh)
+            rdefs, rvar = self.right.to_variable_str(fresh)
+            var = fresh()
+            return ldefs + rdefs + [f'{var} = {lvar} {self.op} {rvar}'], var
+        
+        def to_func_str(self, fresh):
+            ldefn, lcall = self.left.to_func_str(fresh) 
+            rdefn, rcall = self.right.to_func_str(fresh)
+            name = fresh()
+            return [f'def {name}():\n    return {lcall} {self.op} {rcall}'] + ldefn + rdefn, f'{name}()'
+
+    def exp_name(self, N_var, N_trials, participant):
+        return f'function_depth_{participant}_{N_var}'
+
+    def random_tree(self, size):
+        if size == 1:
+            return self.ConstNode(rand_const())
+        else:
+            left_size = randint(1, size-1)
+            right_size = size - left_size
+            return self.OpNode(
+                left=self.random_tree(left_size), 
+                right=self.random_tree(right_size),
+                op=choice(all_operators))
+
+    def generate_trial(self, N_var, cond):        
+        tree = self.random_tree(N_var+1)
+
+        names = sample(all_names, k=N_var)
+        i = 0
+        def fresh():
+            nonlocal i
+            name = names[i]
+            i = i + 1
+            return name
+
+        if cond == self.Condition.Parentheses:
+            program = tree.to_paren_str()
+            call = program
+        elif cond == self.Condition.Variable:
+            vardefs, call = tree.to_variable_str(fresh)
+            program = '\n'.join(vardefs) + '\n' + call
+        else:
+            defn, call = tree.to_func_str(fresh)
+            if cond == self.Condition.Random:
+                defn = shuffle_unique(defn)
+            program = '\n'.join(defn) + '\n' + call
+        
+        globls = {}
+        exec(program, globls, globls)
+        answer = eval(call, globls, globls)
+
+        return {
+            'program': program,
+            'cond': str(cond),
+            'answer': answer
+        }
 
 
 class VariableSpanExperiment(Experiment):
@@ -612,7 +711,7 @@ class VariableArithmeticExperiment(Experiment):
     def generate_trial(self, N):
         names = sample(all_names, k=N)
         variables = [
-            {'variable': names[i], 'value': randint(1, 9)}
+            {'variable': names[i], 'value': rand_const()}
             for i in range(N)
         ]
 
@@ -656,10 +755,10 @@ class VariableSequenceExperiment(Experiment):
 
     def generate_expression(self, variables):
         if len(variables) == 0:
-            value = randint(1, 9)
+            value = rand_const()
             return str(value), value
         elif len(variables) == 1:
-            rhs = randint(1, 9)
+            rhs = rand_const()
             op = choice(all_operators)
             expression = f"{variables[0]['variable']} {op} {rhs}"
             value = eval(f"{variables[0]['value']} {op} {rhs}")
@@ -830,7 +929,7 @@ class TraceIntermediateWM(SwapWM):
             if val is not None:
                 return val
             else:
-                return randint(1, 9)
+                return rand_const()
         elif isinstance(expr, Binop):
             left = self.trace_expr(expr.left)
             right = self.trace_expr(expr.right)
