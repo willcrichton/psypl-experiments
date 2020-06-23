@@ -1,3 +1,16 @@
+body.standalone {
+    background: #efefef;
+}
+
+#experiment-container {
+    width: 800px;
+    margin: 10px auto;
+    border: 1px solid #999;
+    padding: 10px 20px;
+    background: white;
+    box-shadow: 1px 1px 4px #aaa;
+}
+
 .experiment {
     font-size: 18px;
     font-family: 'Helvetica Neue', Arial, sans-serif;
@@ -9,12 +22,12 @@
     .trial-counter {
         font-size: 24px;
         font-weight: bold;
-        margin-bottom: 10px;
+        margin-bottom: 15px;
+        padding-bottom: 7px;
+        border-bottom: 1px solid #ccc;
     }
 
     .trial {
-        border: 1px solid #ccc;
-        padding: 10px;
         min-height: 300px;
     }
 

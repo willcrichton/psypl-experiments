@@ -1,5 +1,5 @@
 import React from 'react';
-import '../css/widget.css';
+import '../css/widget.scss';
 
 function now(): number {
   return new Date().getTime();

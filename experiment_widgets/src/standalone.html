@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <%= htmlWebpackPlugin.tags.headTags %>
+    <title>Programming Experiment</title>
+  </head>
+  <body class="standalone">
+    <div id="experiment-container"></div>
+
+    <!-- MTurk needs at least one input on the page -->
+    <input type="hidden" name="_dummy" value="_dummy" />
+
+    <%= htmlWebpackPlugin.tags.bodyTags %>
+  </body>
+</html>

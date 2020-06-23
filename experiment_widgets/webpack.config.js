@@ -7,7 +7,7 @@ const InlineChunkHtmlPlugin = require('react-dev-utils/InlineChunkHtmlPlugin');
 const rules = [
   { test: /\.tsx?$/, use: ['babel-loader', 'ts-loader'] },
   { test: /\.js$/, loader: 'source-map-loader' },
-  { test: /\.css$/, use: ['style-loader', 'css-loader', 'sass-loader']}
+  { test: /\.scss$/, use: ['style-loader', 'css-loader', 'sass-loader']}
 ];
 
 // Packages that shouldn't be bundled but loaded at runtime
@@ -15,16 +15,11 @@ const externals = ['@jupyter-widgets/base'];
 
 const resolve = {
   // Add '.ts' and '.tsx' as resolvable extensions.
-  extensions: [".webpack.js", ".web.js", ".ts", ".tsx", ".js"]
+  extensions: [".webpack.js", ".web.js", ".ts", ".tsx", ".js", ".scss"]
 };
 
 module.exports = [
-  /**
-   * Notebook extension
-   *
-   * This bundle only contains the part of the JavaScript that is run on load of
-   * the notebook.
-   */
+  // Jupyter extension
   {
     entry: './src/extension.ts',
     output: {
@@ -40,10 +35,11 @@ module.exports = [
     resolve,
   },
 
+  // Standalone
   {
-    entry: './src/turk.tsx',
+    entry: './src/standalone.tsx',
     output: {
-      filename: 'turk.js',
+      filename: 'standalone.js',
       libraryTarget: 'var'
     },
     module: {
@@ -51,62 +47,12 @@ module.exports = [
     },
     plugins: [
       new HtmlWebpackPlugin({
-        template: 'src/turk.html',
-        inject: true,
-        filename: 'turk.html'
+        template: 'src/standalone.html',
+        filename: 'standalone.html',
+        inject: true
       }),
-      new InlineChunkHtmlPlugin(HtmlWebpackPlugin, [/turk.js/]),
+      new InlineChunkHtmlPlugin(HtmlWebpackPlugin, [/standalone.js/]),
     ],
     resolve,
   },
-
-  /**
-   * Embeddable experiment_widgets bundle
-   *
-   * This bundle is almost identical to the notebook extension bundle. The only
-   * difference is in the configuration of the webpack public path for the
-   * static assets.
-   *
-   * The target bundle is always `dist/index.js`, which is the path required by
-   * the custom widget embedder.
-   */
-  {
-    entry: './src/index.ts',
-    output: {
-      filename: 'index.js',
-      path: path.resolve(__dirname, 'dist'),
-      libraryTarget: 'amd',
-      library: "experiment_widgets",
-      publicPath: 'https://unpkg.com/experiment_widgets@' + version + '/dist/'
-    },
-    devtool: 'source-map',
-    module: {
-      rules: rules
-    },
-    externals,
-    resolve,
-  },
-
-
-  /**
-   * Documentation widget bundle
-   *
-   * This bundle is used to embed widgets in the package documentation.
-   */
-  {
-    entry: './src/index.ts',
-    output: {
-      filename: 'embed-bundle.js',
-      path: path.resolve(__dirname, 'docs', 'source', '_static'),
-      library: "experiment_widgets",
-      libraryTarget: 'amd'
-    },
-    module: {
-      rules: rules
-    },
-    devtool: 'source-map',
-    externals,
-    resolve,
-  }
-
 ];
