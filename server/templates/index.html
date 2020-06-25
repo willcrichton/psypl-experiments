@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <title>Mind Over Computer</title>
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+
+    <style>
+     body {
+       font-family: 'EB Garamond', serif;
+       font-size: 24px;
+     }
+
+     .container {
+       width: 800px;
+       margin: 20px auto;
+       position: relative;
+     }
+
+     .site-title {
+       font-size: 120px;
+       text-align: center;
+       width: 200px;
+       /*border: 2px solid #ccc;*/
+       padding: 0 20px;
+       border-radius: 4px;
+       margin: 0;
+       position: absolute;
+       left: -260px;
+     }
+
+     .site-title .separator {
+       height: 16px;
+       background: black;
+       border: 2px solid #555;
+       border-radius: 2px;
+       margin: 0 0 10px;
+     }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1 class='site-title'>
+        <div>&#129504;</div>
+        <div class="separator"></div>
+        <div>&#128421;</div>
+      </h1>
+
+      <ul>
+        {% for e in experiments %}
+        <li><a href="/static/experiments/{{ e.url }}.html">{{ e.name }}</a></li>
+        {% endfor %}
+      </ul>
+    </div>
+  </body>
+</html>

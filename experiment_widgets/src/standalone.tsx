@@ -1,13 +1,30 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import axios from 'axios';
 
-import {VariableCuedRecallExperiment, Explanation, generate_experiment} from './variable_cued_recall';
+import {Experiment, Explanation} from 'experiment';
 
-let experiment = generate_experiment();
+const BASE_URL = 'https://mindover.computer';
+declare var EXPERIMENT_NAME: string;
 
-class Experiment extends React.Component {
-  state = { started: false, finished: false }
+class ExperimentContainer extends React.Component {
+  state = { started: false, finished: false, experiment: null }
   results: any = null
+
+  componentDidMount() {
+    axios.get(
+      `${BASE_URL}/generate_experiment`,
+      {params: {experiment: EXPERIMENT_NAME, n_trials: 10}}
+    ).then(({data}) => this.setState({ experiment: data }));
+  }
+
+  componentDidUpdate() {
+    if (this.state.finished) {
+      axios.post(
+        `${BASE_URL}/record_results`,
+        {experiment: EXPERIMENT_NAME, description: this.state.experiment!, results: this.results});
+    }
+  }
 
   render() {
     let start = () => {this.setState({started: true})};
@@ -17,20 +34,20 @@ class Experiment extends React.Component {
           <Explanation start={start}/>
         </div>
         : (!this.state.finished
-          ? <VariableCuedRecallExperiment
+          ? <Experiment
               save_results={(results: any) => {this.results = results;}}
               on_finished={() => {this.setState({finished: true})}}
-              {...experiment} />
+              {...this.state.experiment!} />
           : <div>
             <p>The experiment is complete. Thank you for your participation!</p>
-            <p>
+          {/* <p>
               <input type="submit" value="Click here to conclude the HIT"/>
               <input type="hidden" name="experiment" value={JSON.stringify(experiment)} />
               <input type="hidden" name="results" value={JSON.stringify(this.results)} />
-            </p>
+              </p> */}
           </div>)
     }</div>;
   }
 }
 
-ReactDOM.render(<Experiment />, document.getElementById('experiment-container'));
+ReactDOM.render(<ExperimentContainer />, document.getElementById('experiment-container'));

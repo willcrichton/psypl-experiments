@@ -50,23 +50,23 @@ function make_widget_view(Experiment: any): any {
   }
 }
 
-import {VariableMemoryExperiment} from './variable_memory';
-export let VariableMemoryView = make_widget_view(VariableMemoryExperiment);
+import {Experiment as VariableSpanExperiment} from './experiments/variable_span';
+export let VariableSpanView = make_widget_view(VariableSpanExperiment);
 
-import {VariableArithmeticMemoryExperiment} from './variable_arithmetic_memory';
+import {Experiment as VariableArithmeticMemoryExperiment} from './experiments/variable_arithmetic_memory';
 export let VariableArithmeticMemoryView = make_widget_view(VariableArithmeticMemoryExperiment);
 
-import {VariableArithmeticSequenceExperiment} from './variable_arithmetic_sequence';
+import {Experiment as VariableArithmeticSequenceExperiment} from './experiments/variable_arithmetic_sequence';
 export let VariableArithmeticSequenceView = make_widget_view(VariableArithmeticSequenceExperiment);
 
-import {VariableTracingExperiment} from './variable_tracing';
+import {Experiment as VariableTracingExperiment} from './experiments/variable_tracing';
 export let VariableTracingView = make_widget_view(VariableTracingExperiment);
 
-import {VariableTracingHardExperiment} from './variable_tracing_hard';
+import {Experiment as VariableTracingHardExperiment} from './experiments/variable_tracing_hard';
 export let VariableTracingHardView = make_widget_view(VariableTracingHardExperiment);
 
-import {VariableCuedRecallExperiment} from './variable_cued_recall';
+import {Experiment as VariableCuedRecallExperiment} from './experiments/variable_cued_recall';
 export let VariableCuedRecallView = make_widget_view(VariableCuedRecallExperiment);
 
-import {FunctionBasicExperiment} from './function_basic';
+import {Experiment as FunctionBasicExperiment} from './experiments/function_basic';
 export let FunctionBasicView = make_widget_view(FunctionBasicExperiment);

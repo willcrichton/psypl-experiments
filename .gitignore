@@ -4,3 +4,4 @@ __pycache__
 *.png
 *.egg-info
 *.tar.gz
+server/static/experiments

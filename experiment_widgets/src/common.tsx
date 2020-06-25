@@ -109,38 +109,6 @@ function make_multiple_trials<TrialData>(TrialView: React.ComponentType<TrialPro
   }
 }
 
-
-export let chars = 'abcdefghijklmnopqrstuvwxyz'.split('');
-export let digits = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-
-export function sample<T>(l: T[]): T {
-  const i = Math.floor(Math.random() * l.length);
-  return l[i];
-};
-
-export function range(i: number): number[] {
-  return [...Array(i).keys()];
-}
-
-function shuffle<T>(array: T[]) {
-  var i = 0
-    , j = 0
-    , temp = null
-
-  for (i = array.length - 1; i > 0; i -= 1) {
-    j = Math.floor(Math.random() * (i + 1))
-    temp = array[i]
-    array[i] = array[j]
-    array[j] = temp
-  }
-}
-
-export function sample_many<T>(l: T[], k: number): T[] {
-  let idxs = range(l.length);
-  shuffle(idxs);
-  return range(k).map((i) => l[idxs[i]]);
-}
-
 export function ValueInput(props: {onEnter: (s: string) => void}) {
   return (
     <input type="text"

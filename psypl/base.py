@@ -3,11 +3,17 @@ import hyperopt
 import itertools
 import json
 from copy import deepcopy
+import re
 
 from .utils import pcache
 
 
 class Experiment:
+    @classmethod
+    def name_parts(cls):
+        name = cls.__name__
+        return re.sub(r'(?<!^)(?=[A-Z])', '_', name).split('_')
+
     def exp_name(self, N_var, N_trials):
         raise NotImplementedError
 

@@ -6,11 +6,11 @@ from scipy.stats import wasserstein_distance
 import experiment_widgets
 
 from ..base import Experiment
-from ..utils import all_names, rand_const, sample
+from ..utils import all_names, rand_const, sample, shuffle
 
 
 class VariableCuedRecallExperiment(Experiment):
-    all_exp = [3, 4, 5, 6]
+    all_n_var = [3, 4, 5, 6]
     all_participants = ["will"]
     num_to_recall = 2
     num_trials = 20
@@ -55,9 +55,10 @@ class VariableCuedRecallExperiment(Experiment):
 
         return pd.DataFrame(df)
 
-    def generate_experiment(self, N_var, N_trials):
+    def generate_experiment(self, N_trials):
+        trial_n_var = [N for N in self.all_n_var for _ in range(N_trials // len(self.all_n_var))]
         return {
-            "trials": [self.generate_trial(N_var) for _ in range(N_trials)],
+            "trials": [self.generate_trial(N_var) for N_var in shuffle(trial_n_var)],
             "between_trials_time": 2000,
         }
 

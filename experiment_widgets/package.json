@@ -29,27 +29,25 @@
     "url": "https://github.com//"
   },
   "scripts": {
-    "build": "npm run build:lib && npm run build:nbextension",
+    "build": "npm run build:nbextension",
     "build:labextension": "npm run clean:labextension && mkdirp experiment_widgets/labextension && cd experiment_widgets/labextension && npm pack ../..",
-    "build:lib": "tsc",
     "build:nbextension": "webpack -p",
     "build:all": "npm run build:labextension && npm run build:nbextension",
     "clean": "npm run clean:lib && npm run clean:nbextension",
     "clean:lib": "rimraf lib",
     "clean:labextension": "rimraf experiment_widgets/labextension",
     "clean:nbextension": "rimraf experiment_widgets/nbextension/static/index.js",
-    "prepack": "npm run build:lib",
     "test": "npm run test:firefox",
     "test:chrome": "karma start --browsers=Chrome tests/karma.conf.js",
     "test:debug": "karma start --browsers=Chrome --singleRun=false --debug=true tests/karma.conf.js",
     "test:firefox": "karma start --browsers=Firefox tests/karma.conf.js",
     "test:ie": "karma start --browsers=IE tests/karma.conf.js",
     "watch": "npm-run-all -p watch:*",
-    "watch:lib": "tsc -w",
     "watch:nbextension": "webpack --watch"
   },
   "dependencies": {
     "@jupyter-widgets/base": "^1.1.10 || ^2",
+    "axios": "^0.19.2",
     "react": "^16.13.1",
     "react-dom": "^16.13.1"
   },
