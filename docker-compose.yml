@@ -1,0 +1,21 @@
+version: '3.1'
+
+services:
+  mongo:
+    image: mongo
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: moc
+      MONGO_INITDB_ROOT_PASSWORD: moc
+    volumes:
+      - ./db:/data/db
+    ports:
+      - 27017:27017
+
+  nginx:
+    image: nginx
+    volumes:
+      - ./server:/var/www
+      - ./server/nginx.conf:/etc/nginx/nginx.conf
+      - /etc/letsencrypt:/etc/letsencrypt
+    network_mode: "host" # to access Flask server

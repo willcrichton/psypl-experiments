@@ -26,7 +26,6 @@ const resolve = {
 const experiments = fs.readdirSync('src/experiments').map((fname) => {
   const exp_name = path.basename(fname, '.tsx');
   return {
-    watch: false,
     entry: './src/standalone.tsx',
     output: {
       filename: `${exp_name}.js`,
@@ -52,19 +51,21 @@ const experiments = fs.readdirSync('src/experiments').map((fname) => {
   };
 });
 
+module.exports = experiments[3];
 
-module.exports = [
-  // Jupyter extension
-  {
-    entry: './src/extension.ts',
-    output: {
-      filename: 'index.js',
-      path: path.resolve(__dirname, 'experiment_widgets', 'nbextension', 'static'),
-      libraryTarget: 'amd'
-    },
-    module: { rules },
-    devtool: 'source-map',
-    externals,
-    resolve,
-  },
-].concat(experiments);
+/*
+* module.exports = [
+  *   // Jupyter extension
+  *   {
+    *     entry: './src/extension.ts',
+    *     output: {
+      *       filename: 'index.js',
+      *       path: path.resolve(__dirname, 'experiment_widgets', 'nbextension', 'static'),
+      *       libraryTarget: 'amd'
+      *     },
+    *     module: { rules },
+    *     devtool: 'source-map',
+    *     externals,
+    *     resolve,
+    *   },
+  * ].concat(experiments); */

@@ -1,13 +1,21 @@
 from flask import Flask, render_template, request, jsonify
+from flask_pymongo import PyMongo
 from psypl.experiments import EXPERIMENTS
+from bson import json_util
 
 app = Flask(__name__)
 app.debug = True
+
+app.config["MONGO_URI"] = "mongodb://moc:moc@localhost:27017/experiments?authSource=admin"
+
+mongo = PyMongo(app)
+experiments_db = mongo.db.experiments
 
 def get_experiment(name):
     name = ''.join(name.split('_') + ['experiment'])
     cls = [e for e in EXPERIMENTS if e.__name__.lower() == name][0]
     return cls()
+
 
 @app.route("/")
 def index():
@@ -30,5 +38,23 @@ def generate_experiment():
 def record_results():
     data = request.get_json()
     experiment = get_experiment(data['experiment'])
-    # TODO: get participant name, then save results somewhere
+    participant = data['participant']
+    results = data['results']
+    description = data['description']
+
+    experiments_db.update_one(
+        {'experiment_name': experiment.__class__.__name__},
+        {'$push': {f'participants.{participant}.trials': description['trials'],
+                   f'participants.{participant}.results': results}})
+
     return ''
+
+@app.route("/init_db")
+def initdb():
+    mongo.db['experiments'].insert_many([{
+        'experiment_name': exp.__name__,
+        'participants': {}
+    } for exp in EXPERIMENTS])
+    return ''
+            
+    

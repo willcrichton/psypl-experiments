@@ -14,14 +14,14 @@ class Experiment:
         name = cls.__name__
         return re.sub(r'(?<!^)(?=[A-Z])', '_', name).split('_')
 
-    def exp_name(self, N_var, N_trials):
+    def pcache_key(self, participant):
         raise NotImplementedError
 
-    def eval_response(self, N_var, experiment, results):
+    def eval_response(self, experiment, results):
         raise NotImplementedError
 
-    def process_results(self, N_var, N_trials, **kwargs):
-        data = pcache.get(self.exp_name(N_var, N_trials, **kwargs))
+    def process_results(self, participant, **kwargs):
+        data = pcache.get(self.exp_name(participant, **kwargs))
         experiment = data["experiment"]
         results = data["results"]
         return self.eval_response(N_var, experiment, results, **kwargs)
@@ -29,67 +29,23 @@ class Experiment:
     def results(self):
         return pd.concat([self.process_results(N_var, 10) for N_var in self.all_exp])
 
-    def param_search(self, model, space, N_trials=300, timeout=120, **kwargs):
-        gt = self.results()
-
-        def objective(args):
-            kwargs = {
-                param.inputs()[0].pos_args[0].eval(): arg
-                for arg, param in zip(args, space)
-            }
-            sim = self.simulate(N_trials=N_trials, model=lambda: model(**kwargs))
-            return self.simulation_loss(gt, sim)
-
-        trials = hyperopt.Trials()
-        best_params = hyperopt.fmin(
-            objective,
-            space,
-            algo=hyperopt.tpe.suggest,
-            timeout=timeout,
-            trials=trials,
-            **kwargs
+    def save_results(self, N_var, N_trials, partcipant, experiment, results):
+        pkey = self.exp_name(N_var, N_trials, participant)
+        prev_results = pcache.get(
+            pkey, lambda: {"experiment": {**experiment, "trials": []}, "results": []}
         )
-        all_params = pd.DataFrame(
-            [
-                {
-                    **{k: v[0] for k, v in trial["misc"]["vals"].items()},
-                    "loss": trial["result"]["loss"],
-                }
-                for trial in trials.trials
-            ]
-        )
-        return best_params, all_params
-
-    def simulate_trials(self, N_var, N_trials, model):
-        experiment = self.generate_experiment(N_var, N_trials)
-
-        response = [
-            {"response": self.simulate_trial(trial, model)}
-            for trial in experiment["trials"]
-        ]
-
-        return self.eval_response(N_var, experiment, response, participant="simulation")
-
-    def simulate(self, model, N_trials=1000):
-        return pd.concat(
-            [self.simulate_trials(N_var, N_trials, model) for N_var in self.all_exp]
-        )
+        prev_results["experiment"]["trials"].extend(experiment["trials"])
+        prev_results["results"].extend(results)
+        pcache.set(pkey, prev_results)
 
     def run_experiment(self, participant, N_var, N_trials=20, dummy=False):
         exp_desc = self.generate_experiment(N_var=N_var, N_trials=N_trials)
-        exp = self.Widget(experiment=json.dumps(exp_desc), results="[]")
-
-        pkey = self.exp_name(N_var, N_trials, participant)
-        prev_results = pcache.get(
-            pkey, lambda: {"experiment": {**exp_desc, "trials": []}, "results": []}
-        )
+        exp_widget = self.Widget(experiment=json.dumps(exp_desc), results=json.dumps([]))
 
         def on_result_change(_):
             if not dummy:
-                prev_copy = deepcopy(prev_results)
-                prev_copy["experiment"]["trials"].extend(exp_desc["trials"])
-                prev_copy["results"].extend(json.loads(exp.results))
-                pcache.set(pkey, prev_copy)
+                self.save_results(
+                    N_var, N_trials, participant, exp_desc, json.loads(exp_widget.results))
 
-        exp.observe(on_result_change)
-        return exp
+        exp_widget.observe(on_result_change)
+        return exp_widget

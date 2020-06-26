@@ -113,7 +113,7 @@ export function ValueInput(props: {onEnter: (s: string) => void}) {
   return (
     <input type="text"
            className="exp-input"
-                autoFocus={true}
+           autoFocus={true}
            onKeyPress={(e) => {
              if (e.key == 'Enter') {
                props.onEnter((e.target as HTMLInputElement).value);
