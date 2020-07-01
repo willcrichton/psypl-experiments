@@ -1,6 +1,6 @@
 import React from 'react';
 
-import {TrialStageProps, make_trial_sequence, make_multiple_trials} from '../common';
+import {TrialSequenceProps, make_trial_sequence, make_multiple_trials} from '../common';
 
 import {code_stage} from './variable_span';
 
@@ -10,7 +10,7 @@ interface TrialData {
   presentation_time: number
 }
 
-let input_stage = (props: TrialStageProps<TrialData>) => {
+let input_stage = (props: TrialSequenceProps<TrialData>) => {
   let trial = props.trial;
   let ref = React.createRef<HTMLInputElement>();
 

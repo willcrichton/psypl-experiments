@@ -27,14 +27,13 @@ def index():
         for e in EXPERIMENTS
     ])
 
-@app.route('/generate_experiment')
+@app.route('/api/generate_experiment')
 def generate_experiment():
     experiment_name = request.args.get('experiment')
-    N_trials = int(request.args.get('n_trials'))
     experiment = get_experiment(experiment_name)
-    return jsonify(experiment.generate_experiment(N_trials=N_trials))
+    return jsonify(experiment.generate_experiment())
 
-@app.route('/record_results', methods=['POST'])
+@app.route('/api/record_results', methods=['POST'])
 def record_results():
     data = request.get_json()
     experiment = get_experiment(data['experiment'])
@@ -49,7 +48,7 @@ def record_results():
 
     return ''
 
-@app.route("/init_db")
+@app.route("/api/init_db")
 def initdb():
     mongo.db['experiments'].insert_many([{
         'experiment_name': exp.__name__,

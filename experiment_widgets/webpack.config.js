@@ -40,7 +40,8 @@ const experiments = fs.readdirSync('src/experiments').map((fname) => {
       new HtmlWebpackPlugin({
         template: 'src/standalone.html',
         filename: `${exp_name}_experiment.html`,
-        inject: true
+        inject: true,
+        cache: false
       }),
       new InlineChunkHtmlPlugin(HtmlWebpackPlugin, [`${exp_name}.js`]),
     ],
@@ -51,7 +52,7 @@ const experiments = fs.readdirSync('src/experiments').map((fname) => {
   };
 });
 
-module.exports = experiments[3];
+module.exports = experiments[2];
 
 /*
 * module.exports = [

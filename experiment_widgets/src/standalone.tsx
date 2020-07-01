@@ -1,12 +1,11 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import axios from 'axios';
 import {Sequence, SequenceChildProps as SeqProps} from 'react-sequence-typed';
 
 import {Experiment, Explanation} from 'experiment';
+import {get_experiment, record_results} from './common';
+import '../css/widget.scss';
 
-const BASE_URL = 'https://mindover.computer';
-declare var EXPERIMENT_NAME: string;
 
 let NameForm = (props: {next: (name: string) => void}) => {
   return <div>
@@ -20,6 +19,31 @@ let NameForm = (props: {next: (name: string) => void}) => {
         }}} />
   </div>;
 };
+
+class ExplanationWrapper extends React.Component<{start: () => void}> {
+  state = {box_checked: false}
+
+  render() {
+    return <div>
+      <Explanation />
+
+      <p>
+        I understand the task and instructions above:
+        <input type="checkbox" onChange={(e) => {
+          this.setState({box_checked: e.target.checked})
+        }} />
+      </p>
+
+      <p>
+        <button
+          onClick={() => {if (this.state.box_checked) { this.props.start(); }}}
+          className={`primary ${this.state.box_checked ? '' : 'disabled'}`}>
+          Start the experiment
+        </button>
+      </p>
+    </div>;
+  }
+}
 
 let ThankYou = (props: SeqProps) => {
   /* <p>
@@ -35,19 +59,11 @@ class ExperimentContainer extends React.Component {
   results: any = null
 
   componentDidMount() {
-    axios.get(
-      `${BASE_URL}/generate_experiment`,
-      {params: {experiment: EXPERIMENT_NAME, n_trials: 20}}
-    ).then(({data}) => this.setState({ experiment: data }));
+    get_experiment().then(({data}) => this.setState({experiment: data}));
   }
 
   save_results() {
-    axios.post(
-      `${BASE_URL}/record_results`,
-      {experiment: EXPERIMENT_NAME,
-       description: this.state.experiment!,
-       participant: this.state.participant!,
-       results: this.results});
+    record_results(this.state.experiment!, this.state.participant!, this.results);
   }
 
   render() {
@@ -58,7 +74,7 @@ class ExperimentContainer extends React.Component {
           props.next();
         }} />}
 
-        {(props: SeqProps) => <Explanation start={props.next} />}
+        {(props: SeqProps) => <ExplanationWrapper start={props.next} />}
 
         {(props: SeqProps) => <Experiment
           save_results={(results: any) => {this.results = results;}}

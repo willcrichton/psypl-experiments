@@ -5,6 +5,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import {DOMWidgetView, DOMWidgetModel} from '@jupyter-widgets/base';
+import '../css/widget.scss';
 
 export class ExperimentModel extends DOMWidgetModel {};
 

@@ -11,9 +11,33 @@ body.standalone {
     box-shadow: 1px 1px 4px #aaa;
 }
 
+$font-size: 22px;
+$base-color: rgb(15, 100, 141);
+$light-color: #f0faff;
+
 .experiment {
-    font-size: 18px;
+    font-size: $font-size;
     font-family: 'Helvetica Neue', Arial, sans-serif;
+
+    input {
+        font-size: $font-size;
+
+        &[type=checkbox] {
+            width: 15px;
+            height: 15px;
+            margin-left: 10px;
+            position: relative;
+            top: 2px;
+        }
+
+        &[type=text] {
+            margin-top: 5px;
+        }
+    }
+
+    ul {
+        li { margin-bottom: 5px; }
+    }
 
     .exp-input {
         width: 40px;
@@ -31,9 +55,40 @@ body.standalone {
         min-height: 300px;
     }
 
-    button { margin-top: 5px; }
+    button {
+        margin-top: 5px;
+        font-size: $font-size;
+        background-color: $light-color;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 4px 11px;
+        cursor: pointer;
 
-    pre { margin: 0; }
+        &.primary {
+            color: white;
+            background-color: $base-color;
+        }
+
+        &.disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+    }
+
+    pre {
+        margin: 0;
+    }
+
+    .indent {
+        padding-left: 15px;
+        border-left: 2px solid $base-color;
+    }
+
+    .progress-bar {
+        display: inline-block;
+        width: 100px;
+        margin: 0 10px;
+    }
 }
 
 #submitButton { display: none; }

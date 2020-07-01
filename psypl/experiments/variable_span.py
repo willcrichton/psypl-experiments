@@ -2,25 +2,29 @@ import pandas as pd
 from scipy.stats import wasserstein_distance
 
 from ..base import Experiment
-from ..utils import all_names, rand_const, sample
+from ..utils import all_names, rand_const, sample, shuffle
 
 
 class VariableSpanExperiment(Experiment):
-    all_exp = [3, 4, 5, 6]
+    all_n_var = [3, 4, 5, 6]
 
     def exp_name(self, N_var, N_trials):
         return f"varmem_{N_var}_{N_trials}"
 
-    def generate_experiment(self, N_var, N_trials=10):
-        return {"trials": [self.generate_trial(N_var) for _ in range(N_trials)]}
+    def generate_experiment(self, N_trials=40):
+        trial_n_var = [N for N in self.all_n_var for _ in range(N_trials // len(self.all_n_var))]
+        return {
+            "trials": [self.generate_trial(N_var) for N_var in shuffle(trial_n_var)],
+            "between_trials_time": 2000,
+        }
 
-    def generate_trial(self, N):
-        names = sample(all_names, k=N)
+    def generate_trial(self, N_var):
+        names = sample(all_names, k=N_var)
         return {
             "variables": [
-                {"variable": names[i], "value": rand_const()} for i in range(N)
+                {"variable": names[i], "value": rand_const()} for i in range(N_var)
             ],
-            "presentation_time": N * 1500,
+            "presentation_time": N_var * 1500,
         }
 
     def eval_response(self, N_var, experiment, results):

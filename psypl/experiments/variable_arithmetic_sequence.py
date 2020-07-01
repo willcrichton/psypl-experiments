@@ -10,7 +10,7 @@ from ..base import Experiment
 from ..utils import all_names, all_operators, rand_const, sample
 
 
-class VariableSequenceExperiment(Experiment):
+class VariableArithmeticSequenceExperiment(Experiment):
     all_exp = [0]
     Widget = experiment_widgets.VariableArithmeticSequenceExperiment
 
@@ -37,13 +37,13 @@ class VariableSequenceExperiment(Experiment):
             value = eval(f"{lhs['value']} {op} {rhs['value']}")
             return expression, value
 
-    def generate_experiment(self, N_var, N_trials):
+    def generate_experiment(self, N_trials=20):
         return {
-            "trials": [self.generate_trial(N_var) for _ in range(N_trials)],
-            "between_trials_time": 1000,
+            "trials": [self.generate_trial() for _ in range(N_trials)],
+            "between_trials_time": 2000,
         }
 
-    def generate_trial(self, _):
+    def generate_trial(self):
         K = 10
         names = sample(all_names, k=K)
         variables = []
@@ -53,7 +53,7 @@ class VariableSequenceExperiment(Experiment):
                 {"variable": names[i], "expression": expression, "value": value}
             )
 
-        return {"variables": variables, "wait_time": 1000}
+        return {"variables": variables, "wait_time": 2000}
 
     def analyze_error(self, variables, expression, guess):
         return "calculation" # TODO

@@ -1,6 +1,6 @@
 import React from 'react';
 
-import {TrialStageProps, make_trial_sequence, make_multiple_trials} from '../common';
+import {TrialSequenceProps, make_trial_sequence, make_multiple_trials, SampleTrial} from '../common';
 
 interface TrialData {
   variables: {variable: string, value: string}[]
@@ -9,14 +9,14 @@ interface TrialData {
 }
 
 export
-let code_stage = (props: TrialStageProps<TrialData>) => {
+let code_stage = (props: TrialSequenceProps<TrialData>) => {
   let trial = props.trial;
   let prog = trial.variables.map((v) => `${v.variable} = ${v.value}`).join('\n');
   setTimeout(() => { props.next_stage() }, trial.presentation_time);
   return <pre>{prog}</pre>;
 }
 
-let input_stage = (props: TrialStageProps<TrialData>) => {
+let input_stage = (props: TrialSequenceProps<TrialData>) => {
   let trial = props.trial;
   let response: {[key:string]: string} = {};
 
@@ -32,7 +32,7 @@ let input_stage = (props: TrialStageProps<TrialData>) => {
     <div>
       {trial.recall_variables.map((v) =>
         <div>
-          <pre style={{display: 'inline'}}>{v} = </pre>
+          <code>{v} = </code>
           <input className='exp-input' type="text"
                  onChange={(e) => { response[v] = e.target.value; }} />
         </div>)}
@@ -44,41 +44,26 @@ let input_stage = (props: TrialStageProps<TrialData>) => {
 let TrialView = make_trial_sequence([code_stage, input_stage]);
 export let Experiment = make_multiple_trials<TrialData>(TrialView);
 
-class SampleTrial extends React.Component {
-  state = {playing: false}
+export let Explanation = (props: any) =>
+  <div>
+    <p>This is an experiment to test your memory for variable/value pairs. You will be presented with a sequence of pairs like this:</p>
 
-  render() {
-    let sample_trial = {
-      variables: [
-        {variable: 'q', value: '3'},
-        {variable: 'f', value: '2'},
-        {variable: 'e', value: '8'}
-      ],
-      recall_variables: ['e', 'q'],
-      presentation_time: 4500
-    };
-
-    return this.state.playing
-      ? <TrialView trial={sample_trial} finished={() => {this.setState({playing: false})}} />
-      : <button onClick={() => {this.setState({playing: true})}}>Click here to try a sample task</button>;
-  }
-}
-
-export let Explanation = (props: any) => {
-  return <div>
-    <p>This is an experiment to test your memory for lists of letters and numbers. You will be presented with letter/number pairs like this:</p>
-
-    <pre>
+    <div className="indent"><pre>
       {`x = 4
 q = 8
-r = 2`}</pre>
+r = 2`}</pre></div>
 
-    <p>Then you will be prompted with two randomly selected letters. Your goal is to enter the paired numbers. In the above example, if prompted for <code>x</code>, you should enter <code>4</code>.</p>
+    <p>Then you will be prompted with two randomly selected variables. Your task is to enter the corresponding number. In the above example, if prompted for <code>x</code>, you should enter <code>4</code>.</p>
 
-    <SampleTrial />
+    <SampleTrial TrialView={TrialView} />
 
-    <p>Each trial may have a different number of letter/number pairs from the last one. You will complete 20 trials. Once you're ready, click the button below to start the experiment.</p>
+    <p>Once you understand the task, please read the following instructions.</p>
 
-    <p><button onClick={props.start}>Start the experiment</button></p>
+    <ul>
+      <li>You will complete 20 trials.</li>
+      <li>Each trial may have a different number of variable pairs from the last one.</li>
+      <li>Trials are timed, so you must perform the experiment without a break.</li>
+      <li>Please participate in an environment without distractions, either sounds or images.</li>
+      <li>If you aren't sure of an answer, you should guess.</li>
+    </ul>
   </div>;
-};
