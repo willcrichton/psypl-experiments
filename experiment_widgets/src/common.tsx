@@ -1,5 +1,4 @@
 import React from 'react';
-import axios from 'axios';
 import {Line} from 'rc-progress';
 
 function now(): number {
@@ -103,24 +102,30 @@ function make_trial_generator<TrialData, TrialState>(
   }
 }
 
+const BREAK_TIME: number = 30 * 1000;
+const BREAK_EVERY: number = 10;
+
 export
 function make_multiple_trials<TrialData>(TrialView: React.ComponentType<TrialProps<TrialData>>) {
-  return class extends React.Component<MultipleTrialsProps<TrialData>, {trial_i: number, waiting: boolean, start_time: number}> {
-    state = {trial_i: -1, waiting: true, start_time: 0}
+  return class extends React.Component<MultipleTrialsProps<TrialData>, {trial_i: number, waiting: boolean, start_time: number, on_break: boolean}> {
+    state = {trial_i: -1, waiting: true, start_time: 0, on_break: false}
 
     next_trial() {
-      this.setState({waiting: true});
-      setTimeout(() => {
-        if (this.state.trial_i == this.props.trials.length - 1) {
-          this.props.on_finished();
-        } else {
+      let trial_i = this.state.trial_i;
+      if (trial_i == this.props.trials.length - 1) {
+        this.props.on_finished();
+      } else {
+        this.setState({waiting: true});
+        setTimeout(() => {
+          trial_i = trial_i + 1;
           this.setState({
-            trial_i: this.state.trial_i + 1,
+            trial_i,
             waiting: false,
+            on_break: trial_i > 0 && trial_i % BREAK_EVERY == 0,
             start_time: now()
           });
-        }
-      }, this.props.between_trials_time);
+        }, this.props.between_trials_time);
+      }
     };
 
     componentDidMount() {
@@ -134,17 +139,27 @@ function make_multiple_trials<TrialData>(TrialView: React.ComponentType<TrialPro
         this.next_trial();
       };
 
+      let trial_i = this.state.trial_i;
+      if (this.state.on_break) {
+        setTimeout(() => this.setState({on_break: false}), BREAK_TIME);
+      }
+
       return <div>
         <div className='trial-counter'>
-          Trial {this.state.trial_i+1}/{this.props.trials.length}
+          Trial {trial_i+1}/{this.props.trials.length}
         </div>
         <div className='trial'>
-          {this.state.waiting
-          ? <span>Preparing next trial... <ProgressBar duration={this.props.between_trials_time} /></span>
-          : <TrialView trial={this.props.trials[this.state.trial_i]}
-                       finished={finished} />}
+          {this.state.on_break
+          ? <div>
+            <div>You have a 30 second break. Please be prepared to start the next trial at the end of the break.</div>
+            <ProgressBar duration={BREAK_TIME} />
+          </div>
+          : (this.state.waiting
+           ? <span>Preparing next trial... <ProgressBar duration={this.props.between_trials_time} /></span>
+           : <TrialView trial={this.props.trials[trial_i]}
+                        finished={finished} />)}
         </div>
-      </div>
+      </div>;
     }
   }
 }
@@ -160,43 +175,4 @@ export function ValueInput(props: {onEnter: (s: string) => void, disabled?: bool
                props.onEnter((e.target as HTMLInputElement).value);
              }}} />
   );
-}
-
-const BASE_URL = 'https://mindover.computer/api';
-declare var EXPERIMENT_NAME: string;
-
-export function get_experiment(): Promise<any> {
-  return axios.get(
-    `${BASE_URL}/generate_experiment`,
-    {params: {experiment: EXPERIMENT_NAME}}
-  );
-}
-
-export function record_results(description: any, participant: string, results: any) {
-  axios.post(
-      `${BASE_URL}/record_results`,
-      {experiment: EXPERIMENT_NAME, description, participant, results});
-}
-
-export class SampleTrial extends React.Component<{TrialView: any}> {
-  state = {playing: false, trials: []}
-
-  componentDidMount() {
-    get_experiment().then(({data}) => {
-      this.setState({trials: data.trials});
-    });
-  }
-
-  render() {
-    let TrialView = this.props.TrialView;
-    return this.state.playing
-         ? (this.state.trials.length > 0
-          ? <div className="indent">
-              <TrialView
-                trial={this.state.trials[Math.floor(Math.random() * this.state.trials.length)]}
-                finished={() => {this.setState({playing: false})}} />
-            </div>
-          : <div>Loading...</div>)
-         : <button onClick={() => {this.setState({playing: true})}}>Click here to try a sample task</button>;
-  }
 }

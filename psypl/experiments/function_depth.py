@@ -10,13 +10,13 @@ from .function_align import FunctionAlignExperiment
 
 
 class FunctionDepthExperiment(FunctionAlignExperiment):
-    all_exp = [4, 5, 6]
+    all_n_var = [4, 5, 6]
 
     class Condition(Enum):
         Parentheses = 1
         Variable = 2
         Preorder = 3
-        Random = 4
+        # Random = 4
 
     @dataclass
     class ConstNode:
@@ -72,6 +72,9 @@ class FunctionDepthExperiment(FunctionAlignExperiment):
                 op=choice(all_operators),
             )
 
+    def generate_experiment(self, N_trials=45):
+        return super().generate_experiment(N_trials)
+
     def generate_trial(self, N_var, cond):
         tree = self.random_tree(N_var + 1)
 
@@ -92,12 +95,13 @@ class FunctionDepthExperiment(FunctionAlignExperiment):
             program = "\n".join(vardefs) + "\n" + call
         else:
             defn, call = tree.to_func_str(fresh)
-            if cond == self.Condition.Random:
-                defn = shuffle_unique(defn)
+            # if cond == self.Condition.Random:
+            #     defn = shuffle_unique(defn)
             program = "\n".join(defn) + "\n" + call
 
         globls = {}
         exec(program, globls, globls)
         answer = eval(call, globls, globls)
 
-        return {"program": program, "cond": str(cond), "answer": answer}
+        call_str = None if cond == self.Condition.Parentheses else call
+        return {"program": program, "call": call_str, "cond": str(cond), "answer": answer}

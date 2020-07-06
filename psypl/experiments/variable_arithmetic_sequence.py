@@ -40,11 +40,11 @@ class VariableArithmeticSequenceExperiment(Experiment):
     def generate_experiment(self, N_trials=20):
         return {
             "trials": [self.generate_trial() for _ in range(N_trials)],
-            "between_trials_time": 2000,
+            "between_trials_time": 4000,
         }
 
     def generate_trial(self):
-        K = 10
+        K = 20
         names = sample(all_names, k=K)
         variables = []
         for i in range(K):

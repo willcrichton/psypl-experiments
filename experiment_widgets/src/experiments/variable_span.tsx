@@ -1,6 +1,6 @@
 import React from 'react';
 
-import {TrialSequenceProps, make_trial_sequence, make_multiple_trials, SampleTrial} from '../common';
+import {TrialSequenceProps, make_trial_sequence, make_multiple_trials} from '../common';
 
 interface TrialData {
   variables: {variable: string, value: string}[]
@@ -43,30 +43,17 @@ let input_stage = (props: TrialSequenceProps<TrialData>) => {
   </div>
 }
 
-let TrialView = make_trial_sequence([code_stage, input_stage]);
+export let TrialView = make_trial_sequence([code_stage, input_stage]);
 export let Experiment = make_multiple_trials<TrialData>(TrialView);
 
 export let Explanation = (props: any) =>
   <div>
-    <p>This is an experiment to test your memory for variable/value pairs. You will be presented with a sequence of pairs like this:</p>
+    <p>This is an experiment to test your memory for variable/value pairs. For several seconds, you will be presented with a sequence of pairs like this:</p>
 
     <div className="indent"><pre>
       {`x = 4
 q = 8
 r = 2`}</pre></div>
 
-    <p>Then the program will disappear. Your task is to enter as many variable/value pairs you remember.</p>
-
-    <SampleTrial TrialView={TrialView} />
-
-    <p>Once you understand the task, please read the following instructions.</p>
-
-    <ul>
-      <li>You will complete 20 trials.</li>
-      <li>Each trial may have a different number of variable pairs from the last one.</li>
-      <li>Trials are timed, so you must perform the experiment without a break.</li>
-      <li>Please participate in an environment without distractions, either sounds or images.</li>
-      <li>If you aren't sure of an answer, you should guess.</li>
-      <li><strong>DO NOT</strong> use pen, paper, or any tool to help your memory during the experiment.</li>
-    </ul>
+    <p>Then the code will disappear. Your task is to enter as many variable/value pairs as you remember.</p>
   </div>;

@@ -1,6 +1,6 @@
 import React from 'react';
 
-import {TrialSequenceProps, make_trial_sequence, make_multiple_trials, SampleTrial} from '../common';
+import {TrialSequenceProps, make_trial_sequence, make_multiple_trials, ProgressBar} from '../common';
 
 interface TrialData {
   variables: {variable: string, value: string}[]
@@ -13,7 +13,10 @@ let code_stage = (props: TrialSequenceProps<TrialData>) => {
   let trial = props.trial;
   let prog = trial.variables.map((v) => `${v.variable} = ${v.value}`).join('\n');
   setTimeout(() => { props.next_stage() }, trial.presentation_time);
-  return <pre>{prog}</pre>;
+  return <div>
+    <pre>{prog}</pre>
+    <ProgressBar duration={trial.presentation_time} />
+  </div>
 }
 
 let input_stage = (props: TrialSequenceProps<TrialData>) => {
@@ -41,7 +44,7 @@ let input_stage = (props: TrialSequenceProps<TrialData>) => {
   </div>
 }
 
-let TrialView = make_trial_sequence([code_stage, input_stage]);
+export let TrialView = make_trial_sequence([code_stage, input_stage]);
 export let Experiment = make_multiple_trials<TrialData>(TrialView);
 
 export let Explanation = (props: any) =>
@@ -53,17 +56,5 @@ export let Explanation = (props: any) =>
 q = 8
 r = 2`}</pre></div>
 
-    <p>Then you will be prompted with two randomly selected variables. Your task is to enter the corresponding number. In the above example, if prompted for <code>x</code>, you should enter <code>4</code>.</p>
-
-    <SampleTrial TrialView={TrialView} />
-
-    <p>Once you understand the task, please read the following instructions.</p>
-
-    <ul>
-      <li>You will complete 20 trials.</li>
-      <li>Each trial may have a different number of variable pairs from the last one.</li>
-      <li>Trials are timed, so you must perform the experiment without a break.</li>
-      <li>Please participate in an environment without distractions, either sounds or images.</li>
-      <li>If you aren't sure of an answer, you should guess.</li>
-    </ul>
+    <p>Then you will be prompted with the same variables, randomly ordered. Your task is to enter the corresponding number. In the above example, if prompted for <code>q</code>, you should enter <code>8</code>.</p>
   </div>;

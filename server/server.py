@@ -1,9 +1,11 @@
 from flask import Flask, render_template, request, jsonify
+from flask_cors import CORS
 from flask_pymongo import PyMongo
 from psypl.experiments import EXPERIMENTS
 from bson import json_util
 
 app = Flask(__name__)
+CORS(app)
 app.debug = True
 
 app.config["MONGO_URI"] = "mongodb://moc:moc@localhost:27017/experiments?authSource=admin"
@@ -47,6 +49,15 @@ def record_results():
                    f'participants.{participant}.results': results}})
 
     return ''
+
+@app.route('/api/get_results')
+def get_results():
+    experiment_name = request.args.get('experiment')
+    experiment = get_experiment(experiment_name)
+    results = experiments_db.find_one(
+        {'experiment_name': experiment.__class__.__name__})
+
+    return '' #json_util.dumps(results)
 
 @app.route("/api/init_db")
 def initdb():

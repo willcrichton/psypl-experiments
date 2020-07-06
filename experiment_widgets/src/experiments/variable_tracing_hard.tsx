@@ -6,7 +6,7 @@ interface TrialData {
   prog: string
 }
 
-let trial_view = (props: TrialProps<TrialData>) => {
+export let TrialView = (props: TrialProps<TrialData>) => {
   let start = new Date().getTime();
   let input_ref = React.createRef<HTMLInputElement>();
 
@@ -28,7 +28,6 @@ let trial_view = (props: TrialProps<TrialData>) => {
   </div>;
 };
 
-
 export let Experiment =
-  make_multiple_trials<TrialData>(trial_view);
+  make_multiple_trials<TrialData>(TrialView);
 export let Explanation = (props: any) => <div />;

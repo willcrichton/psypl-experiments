@@ -4,6 +4,8 @@ const version = require('./package.json').version;
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const InlineChunkHtmlPlugin = require('react-dev-utils/InlineChunkHtmlPlugin');
 const webpack = require('webpack');
+const TerserPlugin = require('terser-webpack-plugin')
+const _ = require('lodash');
 
 // Custom webpack rules
 const rules = [
@@ -23,6 +25,10 @@ const resolve = {
   alias: { experiment: path.resolve(__dirname, 'src/experiments/variable_span.tsx') }
 };
 
+const optimization = {
+  minimizer: [new TerserPlugin()]
+};
+
 const experiments = fs.readdirSync('src/experiments').map((fname) => {
   const exp_name = path.basename(fname, '.tsx');
   return {
@@ -35,7 +41,8 @@ const experiments = fs.readdirSync('src/experiments').map((fname) => {
     module: { rules },
     plugins: [
       new webpack.DefinePlugin({
-        EXPERIMENT_NAME: JSON.stringify(exp_name)
+        EXPERIMENT_NAME: JSON.stringify(exp_name),
+        MTURK: true
       }),
       new HtmlWebpackPlugin({
         template: 'src/standalone.html',
@@ -49,13 +56,18 @@ const experiments = fs.readdirSync('src/experiments').map((fname) => {
       ...resolve,
       alias: { experiment: path.resolve(__dirname, `src/experiments/${fname}`) }
     },
+    externals: {
+      react: 'React',
+      'react-dom': 'ReactDOM',
+      axios: 'axios'
+    },
+    optimization
   };
 });
 
-module.exports = experiments[2];
+module.exports = _.find(experiments, (e) => e.output.filename == 'variable_cued_recall.js');
 
-/*
-* module.exports = [
+/* module.exports = [
   *   // Jupyter extension
   *   {
     *     entry: './src/extension.ts',
@@ -68,5 +80,6 @@ module.exports = experiments[2];
     *     devtool: 'source-map',
     *     externals,
     *     resolve,
+    *     optimization
     *   },
   * ].concat(experiments); */

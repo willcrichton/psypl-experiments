@@ -9,6 +9,7 @@ interface TrialData {
 
 declare global { interface Window { Jupyter: any } }
 
+export
 class TrialView extends React.Component<TrialProps<TrialData>, {var_screen: boolean, switch_count: number, start_time: number}> {
   state = {var_screen: true, switch_count: 0, start_time: 0}
   input_ref: React.RefObject<HTMLInputElement>

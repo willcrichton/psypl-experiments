@@ -6,7 +6,7 @@ body.standalone {
     width: 800px;
     margin: 10px auto;
     border: 1px solid #999;
-    padding: 10px 20px;
+    padding: 30px 35px;
     background: white;
     box-shadow: 1px 1px 4px #aaa;
 }
@@ -51,11 +51,17 @@ $light-color: #f0faff;
         border-bottom: 1px solid #ccc;
     }
 
+    hr {
+        border-bottom: none;
+        border-color: #ccc;
+        margin: 15px 0;
+    }
+
     .trial {
         min-height: 300px;
     }
 
-    button {
+    button, input[type=submit] {
         margin-top: 5px;
         font-size: $font-size;
         background-color: $light-color;
@@ -88,6 +94,14 @@ $light-color: #f0faff;
         display: inline-block;
         width: 100px;
         margin: 0 10px;
+    }
+
+    .explanation > div:first-child > p:first-child {
+        margin-top: 0;
+    }
+
+    .explanation-wrapper > div:last-child > p:last-child {
+        margin-bottom: 0;
     }
 }
 

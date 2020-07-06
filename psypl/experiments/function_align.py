@@ -1,5 +1,6 @@
 from enum import Enum
 from random import choices
+import itertools
 
 import pandas as pd
 
@@ -12,7 +13,7 @@ from ..utils import (all_names, all_operators, interleave, rand_const, sample,
 
 class FunctionAlignExperiment(Experiment):
     Widget = experiment_widgets.FunctionBasicExperiment
-    all_exp = [3, 4, 5, 6]
+    all_n_var = [3, 4, 5, 6]
     all_participants = ["will"]
 
     class Condition(Enum):
@@ -28,14 +29,14 @@ class FunctionAlignExperiment(Experiment):
             for participant in self.all_participants for N_var in self.all_exp
         ])
 
-    def generate_experiment(self, N_var, N_trials=20):
-        conditions = list(self.Condition)
+    def generate_experiment(self, N_trials=40):
+        conditions = list(itertools.product(self.all_n_var, list(self.Condition)))
         n_conditions = len(conditions)
 
         return {
             "trials":
             shuffle([
-                self.generate_trial(N_var, cond) for cond in conditions
+                self.generate_trial(*conds) for conds in conditions
                 for _ in range(N_trials // n_conditions)
             ]),
             "between_trials_time":
@@ -66,7 +67,7 @@ class FunctionAlignExperiment(Experiment):
         exec(fbody, globls, globls)
         answer = eval(fcall, globls, globls)
 
-        return {"program": program, "cond": str(cond), "answer": answer}
+        return {"program": program, "call": fcall, "cond": str(cond), "answer": answer}
 
     def eval_response(self, N_var, experiment, results, participant):
         df = []

@@ -3,6 +3,7 @@ from random import choice
 
 import pandas as pd
 
+import itertools
 import experiment_widgets
 from iterextras import unzip
 
@@ -13,7 +14,7 @@ from ..utils import (all_names, all_operators, rand_const, sample, shuffle,
 
 class FunctionBasicExperiment(Experiment):
     Widget = experiment_widgets.FunctionBasicExperiment
-    all_exp = [2, 3, 4]
+    all_n_var = [2, 3, 4]
     all_participants = ["will"]
     num_trials = 40
 
@@ -21,7 +22,7 @@ class FunctionBasicExperiment(Experiment):
         NoFunction = 1
         SimpleFunction = 2
         RenameArgsFunction = 3
-        RandomOrderFunction = 4
+        # RandomOrderFunction = 4
 
     def exp_name(self, N_var, N_trials, participant):
         return f"function_basic_{participant}_{N_var}"
@@ -35,17 +36,17 @@ class FunctionBasicExperiment(Experiment):
             ]
         )
 
-    def generate_experiment(self, N_var, N_trials=30):
-        conditions = list(self.Condition)
+    def generate_experiment(self, N_trials=45):
+        conditions = list(itertools.product(self.all_n_var, list(self.Condition)))
         return {
             "trials": shuffle(
                 [
-                    self.generate_trial(N_var, cond)
-                    for cond in conditions
+                    self.generate_trial(*conds)
+                    for conds in conditions
                     for _ in range(N_trials // len(conditions))
                 ]
             ),
-            "between_trials_time": 2000,
+            "between_trials_time": 4000,
         }
 
     def generate_trial(self, N_var, condition):
@@ -96,10 +97,10 @@ class FunctionBasicExperiment(Experiment):
 
                 if condition == self.Condition.RenameArgsFunction:
                     call_args = free
-                elif condition == self.Condition.RandomOrderFunction:
-                    permutation = shuffle(list(range(len(func_args))))
-                    func_args = [func_args[i] for i in permutation]
-                    call_args = [free[i] for i in permutation]
+                # elif condition == self.Condition.RandomOrderFunction:
+                #     permutation = shuffle(list(range(len(func_args))))
+                #     func_args = [func_args[i] for i in permutation]
+                #     call_args = [free[i] for i in permutation]
 
             fbody = f'def {func_names[i]}({",".join(func_args)}):\n    return {expr}'
             fcall = f'{var_names[i]} = {func_names[i]}({",".join(call_args)})'
@@ -121,6 +122,7 @@ class FunctionBasicExperiment(Experiment):
 
         return {
             "program": program,
+            "call": final_expr,
             "condition": str(condition),
             "answer": eval(final_expr, globls, globls),
         }

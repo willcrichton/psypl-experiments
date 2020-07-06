@@ -27,7 +27,7 @@ let input_stage = (props: TrialSequenceProps<TrialData>) => {
   </div>;
 };
 
-let TrialView = make_trial_sequence([code_stage, input_stage]);
+export let TrialView = make_trial_sequence([code_stage, input_stage]);
 export let Experiment =
   make_multiple_trials<TrialData>(TrialView);
 export let Explanation = (props: any) => <div />;
