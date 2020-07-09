@@ -35,6 +35,36 @@ $light-color: #f0faff;
         }
     }
 
+    .correct-indicator {
+        margin-left: 10px;
+    }
+
+    .correct {
+        $color: green;
+
+        input {
+            border-color: $color;
+        }
+
+        span {
+            color: $color;
+        }
+    }
+
+
+    .incorrect {
+        $color: red;
+
+        input {
+            border-color: $color;
+        }
+
+        span {
+            color: $color;
+        }
+    }
+
+
     ul {
         li { margin-bottom: 5px; }
     }

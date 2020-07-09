@@ -49,3 +49,18 @@ class Experiment:
 
         exp_widget.observe(on_result_change)
         return exp_widget
+
+    def get_mongo_results(self, collection):
+        mongo_data = collection.find_one({'experiment_name': self.__class__.__name__})['participants']
+        results = []
+        for participant, data in mongo_data.items():
+            for trial_index, (trial, result) in enumerate(zip(data['trials'][0], data['results'][0])):
+                results.append({
+                    'participant': participant,
+                    'mturk': 'mturk-' in participant,
+                    'trial_index': trial_index,
+                    **self.eval_trial(trial, result)
+                })
+        return pd.DataFrame(results)
+
+

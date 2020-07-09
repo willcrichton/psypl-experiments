@@ -36,13 +36,13 @@ const experiments = fs.readdirSync('src/experiments').map((fname) => {
     output: {
       filename: `${exp_name}.js`,
       libraryTarget: 'var',
-      path: path.resolve(__dirname, '../server/static/experiments')
+      path: path.resolve(__dirname, '../server/static/experiments_dev')
     },
     module: { rules },
     plugins: [
       new webpack.DefinePlugin({
         EXPERIMENT_NAME: JSON.stringify(exp_name),
-        MTURK: true
+        MTURK: false
       }),
       new HtmlWebpackPlugin({
         template: 'src/standalone.html',
@@ -59,13 +59,14 @@ const experiments = fs.readdirSync('src/experiments').map((fname) => {
     externals: {
       react: 'React',
       'react-dom': 'ReactDOM',
-      axios: 'axios'
+      axios: 'axios',
+      lodash: 'lodash'
     },
     optimization
   };
 });
 
-module.exports = _.find(experiments, (e) => e.output.filename == 'variable_cued_recall.js');
+module.exports = _.find(experiments, (e) => e.output.filename == 'variable_arithmetic_sequence.js');
 
 /* module.exports = [
   *   // Jupyter extension

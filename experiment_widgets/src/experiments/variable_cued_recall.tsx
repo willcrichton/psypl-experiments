@@ -1,6 +1,8 @@
 import React from 'react';
+import _ from 'lodash';
 
-import {TrialSequenceProps, make_trial_sequence, make_multiple_trials, ProgressBar} from '../common';
+import {TrialStageProps, make_trial_sequence, make_multiple_trials, ProgressBar} from '../common';
+import {InstructionParams, instruction_templates} from '../instructions';
 
 interface TrialData {
   variables: {variable: string, value: string}[]
@@ -8,8 +10,12 @@ interface TrialData {
   presentation_time: number
 }
 
+interface TrialState {
+  response?: {variable: string, value: string}[]
+}
+
 export
-let code_stage = (props: TrialSequenceProps<TrialData>) => {
+let code_stage = (props: TrialStageProps<TrialData, TrialState>) => {
   let trial = props.trial;
   let prog = trial.variables.map((v) => `${v.variable} = ${v.value}`).join('\n');
   setTimeout(() => { props.next_stage() }, trial.presentation_time);
@@ -19,12 +25,12 @@ let code_stage = (props: TrialSequenceProps<TrialData>) => {
   </div>
 }
 
-let input_stage = (props: TrialSequenceProps<TrialData>) => {
+let input_stage = (props: TrialStageProps<TrialData, TrialState>) => {
   let trial = props.trial;
   let response: {[key:string]: string} = {};
 
-  let trial_finished = () => {
-    props.trial_finished({
+  let submit = () => {
+    props.next_stage({
       response: trial.recall_variables.map((v) => {
         return {variable: v, value: response[v]};
       })
@@ -38,23 +44,81 @@ let input_stage = (props: TrialSequenceProps<TrialData>) => {
           <code>{v} = </code>
           <input className='exp-input' type="text"
                  onChange={(e) => { response[v] = e.target.value; }} />
-        </div>)}
+        </div>
+      )}
     </div>
-    <button onClick={trial_finished}>Next</button>
+    <button onClick={submit}>Next</button>
   </div>
 }
 
-export let TrialView = make_trial_sequence([code_stage, input_stage]);
+let review_stage = (props: TrialStageProps<TrialData, TrialState>) => {
+  let trial = props.trial;
+  let response = props.state!.response!;
+
+  let correct_values = _.chain(trial.variables).keyBy('variable').mapValues('value').value();
+  let responses = _.chain(response).keyBy('variable').mapValues('value').value();
+  let response_correct =
+    _.mapValues(responses, (value, variable) => correct_values[variable] == value);
+
+  setTimeout(() => props.trial_finished({response}), 3000);
+
+  return <div>
+    <div>
+      {trial.recall_variables.map((v) =>
+        <div className={response_correct[v] ? 'correct' : 'incorrect'}>
+          <code>{v} = </code>
+          <input className='exp-input' type="text"
+            value={responses[v]} />
+          <span className='correct-indicator'>
+            {response_correct[v] ? <>✓</> : <>✗ ({correct_values[v]})</>}
+          </span>
+        </div>
+      )}
+    </div>
+    <ProgressBar duration={3000} />
+  </div>;
+};
+
+let TrialView = make_trial_sequence([code_stage, input_stage, review_stage]);
 export let Experiment = make_multiple_trials<TrialData>(TrialView);
 
-export let Explanation = (props: any) =>
-  <div>
-    <p>This is an experiment to test your memory for variable/value pairs. You will be presented with a sequence of pairs like this:</p>
+let TaskDescription = (props: any) =>
+    <div>
+      <p>This is a 10-minute experiment to test your memory for variable/value pairs. You will be presented with a sequence of pairs like this:</p>
 
-    <div className="indent"><pre>
-      {`x = 4
+      <div className="indent"><pre>
+        {`x = 4
 q = 8
 r = 2`}</pre></div>
 
-    <p>Then you will be prompted with the same variables, randomly ordered. Your task is to enter the corresponding number. In the above example, if prompted for <code>q</code>, you should enter <code>8</code>.</p>
-  </div>;
+      <p>Then you will be prompted with the same variables, randomly ordered. Your task is to enter the corresponding number. In the above example, if prompted for <code>q</code>, you should enter <code>8</code>.</p>
+    </div>;
+
+let sample_data: TrialData = {
+  variables: [
+    {variable: 'r', value: '5'},
+    {variable: 'f', value: '2'},
+    {variable: 't', value: '9'}
+  ],
+  recall_variables: ['f', 't', 'r'],
+  presentation_time: 4500,
+};
+
+let sample_criterion = (trial: TrialData, response: any) => {
+  let correct_values = _.chain(trial.variables).keyBy('variable').mapValues('value').value();
+  let responses = _.chain(response.response).keyBy('variable').mapValues('value').value();
+  let total_correct =
+    _.chain(responses)
+     .mapValues((value, variable) => correct_values[variable] == value ? 1 : 0)
+     .values()
+     .sum()
+     .value();
+  return total_correct == 3;
+};
+
+let instructions = [
+  instruction_templates['no-tools']
+]
+
+export let instruction_params: InstructionParams =
+  {TaskDescription, TrialView, sample_data, sample_criterion, instructions};

@@ -57,7 +57,7 @@ def get_results():
     results = experiments_db.find_one(
         {'experiment_name': experiment.__class__.__name__})
 
-    return '' #json_util.dumps(results)
+    return json_util.dumps(results)
 
 @app.route("/api/init_db")
 def initdb():
@@ -65,6 +65,14 @@ def initdb():
         'experiment_name': exp.__name__,
         'participants': {}
     } for exp in EXPERIMENTS])
-    return ''
+    return 'ok'
             
     
+@app.route('/api/reset_db')
+def resetdb():
+    # for exp in EXPERIMENTS:
+    #     experiments_db.update_one(
+    #         {'experiment_name': exp.__name__},
+    #         {'$set': {'participants': {}}})
+    return 'ok'
+         

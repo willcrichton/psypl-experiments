@@ -10,8 +10,7 @@ from ..utils import all_names, rand_const, sample, shuffle, shuffle_unique
 
 
 class VariableCuedRecallExperiment(Experiment):
-    # all_n_var = [3, 4, 5, 6]
-    all_n_var = [3]
+    all_n_var = [3, 4, 5, 6]
     all_participants = ["will"]
     Widget = experiment_widgets.VariableCuedRecallExperiment
 
@@ -27,24 +26,25 @@ class VariableCuedRecallExperiment(Experiment):
             ]
         )
 
-    def eval_response(self, N_var, experiment, results, participant):
-        df = []
-        for (trial, result) in zip(experiment["trials"], results):
-            gt = {v["variable"]: v["value"] for v in trial["variables"]}
-            correct = sum(
-                [
-                    1
+    def eval_trial(self, trial, result):
+        gt = {v["variable"]: v["value"] for v in trial["variables"]}
+        correct = sum(
+            [
+                1
                     if "value" in response
-                    and gt[response["variable"]] == int(response["value"])
+                and gt[response["variable"]] == int(response["value"])
                     else 0
                     for response in result["response"]
-                ]
-            )
-            df.append({"correct": correct, "N_var": N_var, "participant": participant})
+            ]
+        )
+        N_var = len(trial['variables'])
+        return {
+            "correct_raw": correct, 
+            "correct_frac": correct / N_var, 
+            "N_var": N_var
+        }
 
-        return pd.DataFrame(df)
-
-    def generate_experiment(self, N_trials=1):
+    def generate_experiment(self, N_trials=20):
         trial_n_var = [N for N in self.all_n_var for _ in range(N_trials // len(self.all_n_var))]
         return {
             "trials": [self.generate_trial(N_var) for N_var in shuffle(trial_n_var)],

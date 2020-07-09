@@ -48,6 +48,7 @@
   "dependencies": {
     "@jupyter-widgets/base": "^1.1.10 || ^2",
     "axios": "^0.19.2",
+    "lodash": "^4.17.19",
     "rc-progress": "^3.0.0",
     "react": "^16.13.1",
     "react-dom": "^16.13.1"
@@ -59,6 +60,7 @@
     "@phosphor/application": "^1.6.0",
     "@phosphor/widgets": "^1.6.0",
     "@types/expect.js": "^0.3.29",
+    "@types/lodash": "^4.14.157",
     "@types/mocha": "^5.2.5",
     "@types/node": "^10.11.6",
     "@types/react": "^16.9.34",

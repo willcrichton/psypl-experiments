@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {Line} from 'rc-progress';
 
 function now(): number {
@@ -31,18 +31,22 @@ export class ProgressBar extends React.Component<ProgressBarProps> {
 }
 
 export
-interface TrialStageProps<TrialData, TrialState> {
+interface TrialStageProps<TrialData, TrialState = void> {
   trial: TrialData,
-  next_stage: (state: TrialState) => void,
+  state?: TrialState,
+  next_stage: (state?: TrialState) => void,
   trial_finished: (results: any) => void
 }
 
-export
-interface TrialSequenceProps<TrialData> {
-  trial: TrialData,
-  next_stage: () => void,
-  trial_finished: (results: any) => void
-}
+/* export
+* interface TrialSequenceProps<TrialData> {
+  *   trial: TrialData,
+  *   next_stage: () => void,
+  *   trial_finished: (results: any) => void
+  * }
+*  */
+
+export type TrialSequenceProps<TrialData> = TrialStageProps<TrialData>;
 
 export
 interface TrialProps<TrialData> {
@@ -58,49 +62,45 @@ interface MultipleTrialsProps<TrialData> {
   between_trials_time: number
 }
 
+interface SequenceState<TrialState> {
+  stage: number,
+  state: TrialState | undefined
+}
+
+
 export
-function make_trial_sequence<TrialData>(
-  Views: React.ComponentType<TrialSequenceProps<TrialData>>[]
-): React.ComponentType<TrialProps<TrialData>> {
-  return make_trial_generator((i: number) => (props: TrialStageProps<TrialData, number>) => {
-    if (i == Views.length) {
+let make_trial_sequence = <TrialData, TrialState = void>(
+  Views: React.ComponentType<TrialStageProps<TrialData, TrialState>>[],
+  state?: TrialState
+) => make_trial_generator(
+  (props: TrialStageProps<TrialData, SequenceState<TrialState>>) => {
+    let {stage, state} = props.state!;
+    if (stage == Views.length) {
       return null;
     } else {
-      let View = Views[i];
+      let View = Views[stage];
       return <View trial={props.trial}
+                   state={state}
                    trial_finished={props.trial_finished}
-                   next_stage={() => props.next_stage(i + 1)} />
+                   next_stage={(state?: TrialState) =>
+                     props.next_stage({stage: stage + 1, state})} />
     }
-  }, 0);
-}
+  },
+  {stage: 0, state});
 
 export
-type StageGenerator<TrialData, TrialState> =
-  (state: TrialState) => React.ComponentType<TrialStageProps<TrialData, TrialState>>;
-
-export
-function make_trial_generator<TrialData, TrialState>(
-  gen_view: StageGenerator<TrialData, TrialState>,
-  initial_state: TrialState): React.ComponentType<TrialProps<TrialData>>
-{
-  return class extends React.Component<TrialProps<TrialData>, {state: TrialState}> {
-    state = {state: initial_state}
-
-    componentDidUpdate(prev_props: any) {
-      if (prev_props != this.props) {
-        this.setState({state: initial_state});
-      }
-    }
-
-    render() {
-      let View = gen_view(this.state.state);
-      let next_stage = (state: TrialState) => {
-        this.setState({state});
-      };
-      return <View trial={this.props.trial} next_stage={next_stage} trial_finished={this.props.finished} />;
-    }
-  }
-}
+let make_trial_generator = <TrialData, TrialState>(
+  View: React.ComponentType<TrialStageProps<TrialData, TrialState>>,
+  initial_state: TrialState
+) => (props: TrialProps<TrialData>) => {
+  let [state, setState] = useState(initial_state);
+  let [counter, setCounter] = useState(0);
+  return <View trial={props.trial}
+               state={state}
+               key={counter}
+               next_stage={(state) => {setCounter(counter+1); setState(state!)}}
+               trial_finished={props.finished} />;
+};
 
 const BREAK_TIME: number = 30 * 1000;
 const BREAK_EVERY: number = 10;
@@ -176,3 +176,25 @@ export function ValueInput(props: {onEnter: (s: string) => void, disabled?: bool
              }}} />
   );
 }
+
+/*
+* export type Ok<T> = {tag: "Ok", value: T};
+* export type Err<E> = {tag: "Err", error: E};
+* export type Result<T, E> = Ok<T> | Err<E>;
+*
+* export function ok<T>(value: T): Ok<T> {
+  *   return {tag: "Ok", value};
+  * };
+*
+* export function err<E>(error: E): Err<E> {
+  *   return {tag: "Err", error};
+  * }
+*
+* export function match_result<T, S, E>(
+  *   r: Result<T, E>, ok: (value: T) => S, err: (error: E) => S
+  * ) {
+  *   switch (r.tag) {
+      *       case "Ok": return ok(r.value);
+      *       case "Err": return err(r.error);
+      *   }
+  * } */

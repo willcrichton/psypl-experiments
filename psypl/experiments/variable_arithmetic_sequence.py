@@ -68,17 +68,14 @@ class VariableArithmeticSequenceExperiment(Experiment):
         #         return "substitution"
         # return "calculation"
 
-    def eval_response(self, N_var, experiment, results):
-        df = []
-        for (trial, result) in zip(experiment["trials"], results):
-            result = result["response"]
-            variables = trial["variables"]
-            i = result["i"]
-            error = self.analyze_error(
-                variables[:i], variables[i]["expression"], result["value"]
-            )
-            df.append({"stage": i, "error": error})
-        return pd.DataFrame(df)
+    def eval_trial(self, trial, result):
+        result = result["response"]
+        variables = trial["variables"]
+        i = result["i"]
+        error = self.analyze_error(
+            variables[:i], variables[i]["expression"], result["value"]
+        )
+        return {"stage": i, "error": error}
 
     def simulate_trial(self, trial, model):
         wm = model()
