@@ -38,14 +38,6 @@ interface TrialStageProps<TrialData, TrialState = void> {
   trial_finished: (results: any) => void
 }
 
-/* export
-* interface TrialSequenceProps<TrialData> {
-  *   trial: TrialData,
-  *   next_stage: () => void,
-  *   trial_finished: (results: any) => void
-  * }
-*  */
-
 export type TrialSequenceProps<TrialData> = TrialStageProps<TrialData>;
 
 export
@@ -79,7 +71,8 @@ let make_trial_sequence = <TrialData, TrialState = void>(
       return null;
     } else {
       let View = Views[stage];
-      return <View trial={props.trial}
+      return <View key={stage}
+                   trial={props.trial}
                    state={state}
                    trial_finished={props.trial_finished}
                    next_stage={(state?: TrialState) =>
@@ -93,12 +86,16 @@ let make_trial_generator = <TrialData, TrialState>(
   View: React.ComponentType<TrialStageProps<TrialData, TrialState>>,
   initial_state: TrialState
 ) => (props: TrialProps<TrialData>) => {
-  let [state, setState] = useState(initial_state);
-  let [counter, setCounter] = useState(0);
+  let [state, setState] = useState({
+    trial_state: initial_state,
+    counter: 0
+  });
   return <View trial={props.trial}
-               state={state}
-               key={counter}
-               next_stage={(state) => {setCounter(counter+1); setState(state!)}}
+               state={state.trial_state}
+               key={state.counter}
+               next_stage={(trial_state) => {setState({
+                 trial_state: trial_state!, counter: state.counter+1
+               });}}
                trial_finished={props.finished} />;
 };
 
@@ -156,7 +153,8 @@ function make_multiple_trials<TrialData>(TrialView: React.ComponentType<TrialPro
           </div>
           : (this.state.waiting
            ? <span>Preparing next trial... <ProgressBar duration={this.props.between_trials_time} /></span>
-           : <TrialView trial={this.props.trials[trial_i]}
+           : <TrialView key={trial_i}
+                        trial={this.props.trials[trial_i]}
                         finished={finished} />)}
         </div>
       </div>;
@@ -176,25 +174,3 @@ export function ValueInput(props: {onEnter: (s: string) => void, disabled?: bool
              }}} />
   );
 }
-
-/*
-* export type Ok<T> = {tag: "Ok", value: T};
-* export type Err<E> = {tag: "Err", error: E};
-* export type Result<T, E> = Ok<T> | Err<E>;
-*
-* export function ok<T>(value: T): Ok<T> {
-  *   return {tag: "Ok", value};
-  * };
-*
-* export function err<E>(error: E): Err<E> {
-  *   return {tag: "Err", error};
-  * }
-*
-* export function match_result<T, S, E>(
-  *   r: Result<T, E>, ok: (value: T) => S, err: (error: E) => S
-  * ) {
-  *   switch (r.tag) {
-      *       case "Ok": return ok(r.value);
-      *       case "Err": return err(r.error);
-      *   }
-  * } */

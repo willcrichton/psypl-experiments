@@ -60,13 +60,13 @@ const experiments = fs.readdirSync('src/experiments').map((fname) => {
       react: 'React',
       'react-dom': 'ReactDOM',
       axios: 'axios',
-      lodash: 'lodash'
+      lodash: '_'
     },
     optimization
   };
 });
 
-module.exports = _.find(experiments, (e) => e.output.filename == 'variable_arithmetic_sequence.js');
+module.exports = _.find(experiments, (e) => e.output.filename == 'function_depth.js');
 
 /* module.exports = [
   *   // Jupyter extension

@@ -1,8 +1,8 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import _ from 'lodash';
 
 import {TrialStageProps, make_trial_sequence, make_multiple_trials, ProgressBar} from '../common';
-import {InstructionParams, instruction_templates} from '../instructions';
+import {instruction_templates, SampleTrial, TaskDescriptionProps} from '../instructions';
 
 interface TrialData {
   variables: {variable: string, value: string}[]
@@ -18,7 +18,8 @@ export
 let code_stage = (props: TrialStageProps<TrialData, TrialState>) => {
   let trial = props.trial;
   let prog = trial.variables.map((v) => `${v.variable} = ${v.value}`).join('\n');
-  setTimeout(() => { props.next_stage() }, trial.presentation_time);
+  useEffect(() => { setTimeout(() => { props.next_stage(); }, trial.presentation_time); }, []);
+
   return <div>
     <pre>{prog}</pre>
     <ProgressBar duration={trial.presentation_time} />
@@ -60,7 +61,7 @@ let review_stage = (props: TrialStageProps<TrialData, TrialState>) => {
   let response_correct =
     _.mapValues(responses, (value, variable) => correct_values[variable] == value);
 
-  setTimeout(() => props.trial_finished({response}), 3000);
+  useEffect(() => { setTimeout(() => props.trial_finished({response}), 3000); }, []);
 
   return <div>
     <div>
@@ -81,18 +82,6 @@ let review_stage = (props: TrialStageProps<TrialData, TrialState>) => {
 
 let TrialView = make_trial_sequence([code_stage, input_stage, review_stage]);
 export let Experiment = make_multiple_trials<TrialData>(TrialView);
-
-let TaskDescription = (props: any) =>
-    <div>
-      <p>This is a 10-minute experiment to test your memory for variable/value pairs. You will be presented with a sequence of pairs like this:</p>
-
-      <div className="indent"><pre>
-        {`x = 4
-q = 8
-r = 2`}</pre></div>
-
-      <p>Then you will be prompted with the same variables, randomly ordered. Your task is to enter the corresponding number. In the above example, if prompted for <code>q</code>, you should enter <code>8</code>.</p>
-    </div>;
 
 let sample_data: TrialData = {
   variables: [
@@ -116,9 +105,23 @@ let sample_criterion = (trial: TrialData, response: any) => {
   return total_correct == 3;
 };
 
+let TaskDescription = (props: TaskDescriptionProps) =>
+    <div>
+      <p>This is a 10-minute experiment to test your memory for variable/value pairs. You will be presented with a sequence of pairs like this:</p>
+
+      <div className="indent"><pre>
+        {`x = 4
+q = 8
+r = 2`}</pre></div>
+
+      <p>Then you will be prompted with the same variables, randomly ordered. Your task is to enter the corresponding number. In the above example, if prompted for <code>q</code>, you should enter <code>8</code>.</p>
+
+      <SampleTrial TrialView={TrialView} criterion={sample_criterion} trial_data={sample_data}
+        on_finish={props.done} />
+    </div>;
+
 let instructions = [
   instruction_templates['no-tools']
 ]
 
-export let instruction_params: InstructionParams =
-  {TaskDescription, TrialView, sample_data, sample_criterion, instructions};
+export let instruction_params = {TaskDescription, instructions};

@@ -2,7 +2,7 @@ import React from 'react';
 
 import {TrialProps, make_multiple_trials, ValueInput} from '../common';
 
-interface TrialData {
+export interface TrialData {
   program: string
   call?: string
 }

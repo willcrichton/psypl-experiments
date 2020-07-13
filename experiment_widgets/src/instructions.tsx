@@ -3,21 +3,22 @@ import {ProgressBar} from './common';
 
 enum SampleState { Idle, Waiting, Playing, Finished }
 
-interface SampleTrialProps {
+export interface SampleTrialProps {
   TrialView: any,
   on_finish: () => void,
   trial_data: any,
   criterion: (trial_data: any, response: any) => boolean
 }
 
-let SampleTrial = (props: SampleTrialProps) => {
+export let SampleTrial = (props: SampleTrialProps) => {
   let [state, set_state] = useState(SampleState.Idle);
   let [response, set_response] = useState(undefined);
+  let [tried, set_tried] = useState(false);
   let TrialView = props.TrialView;
 
   switch (state) {
     case SampleState.Idle: {
-      return <button onClick={() => set_state(SampleState.Waiting)}>
+      return <button onClick={() => set_state(SampleState.Waiting)} className={tried ? '' : 'primary'}>
         Click here to try a sample trial
       </button>;
     }
@@ -45,8 +46,9 @@ let SampleTrial = (props: SampleTrialProps) => {
       let passed = props.criterion(props.trial_data, response);
       if (passed) {
         setTimeout(() => {
-          props.on_finish();
           set_state(SampleState.Idle);
+          set_tried(true);
+          props.on_finish();
         }, 3000);
 
         return <div>
@@ -67,11 +69,12 @@ let SampleTrial = (props: SampleTrialProps) => {
   }
 }
 
+export interface TaskDescriptionProps {
+  done: () => void
+}
+
 export interface InstructionParams {
-  TaskDescription: React.ComponentType
-  TrialView: React.ComponentType<any>,
-  sample_data: any
-  sample_criterion: any,
+  TaskDescription: React.ComponentType<TaskDescriptionProps>
   instructions: JSX.Element[]
 }
 
@@ -82,18 +85,15 @@ export let instruction_templates = {
 
 export let Instructions = (props: {params: InstructionParams, experiment: any, start: () => void}) => {
   let [box_checked, set_box_checked] = useState(false);
-  let [sample_tried, set_sample_tried] = useState(false);
-  let {TaskDescription, TrialView, sample_data, sample_criterion, instructions} = props.params;
+  let [description_done, set_description_done] = useState(false);
+  let {TaskDescription, instructions} = props.params;
 
   return <div className='explanation-wrapper'>
     <div className='explanation'>
-      <TaskDescription />
+      <TaskDescription done={() => set_description_done(true)}/>
     </div>
 
-    <SampleTrial TrialView={TrialView} on_finish={() => set_sample_tried(true)}
-                 trial_data={sample_data} criterion={sample_criterion} />
-
-    {sample_tried
+    {description_done
     ? <div>
       <p>Once you understand the task, please read the following instructions.</p>
 
