@@ -59,6 +59,7 @@ class Experiment:
                     'participant': participant,
                     'mturk': 'mturk-' in participant,
                     'trial_index': trial_index,
+                    "duration": result['trial_time'] / 1000.,
                     **self.eval_trial(trial, result)
                 })
         return pd.DataFrame(results)

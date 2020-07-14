@@ -33,12 +33,14 @@ let TaskDescription = (props: TaskDescriptionProps) =>
 
 f(8, 2, 9)`}</pre></p>
 
+    <p>Here, the correct answer is 3. Try out a sample trial yourself:</p>
+
     <AccumulatingSequence>
       {({next}: SequenceChildProps) =>
         <SampleTrial TrialView={TrialView} on_finish={next} criterion={sample_criterion} trial_data={cond1_data} />}
       {(_: SequenceChildProps) =>
         <div>
-          <p>The other kind of program is almost the same, except the function call is placed above the function, aligned with the definition. (This is not a technically valid program in that a function is being used before it's defined, but don't worry about that.)</p>
+          <p>The other kind of program is almost the same, except the function call is placed above the function. This is not a syntactically valid program, but you should interpret it as a call to the function below.</p>
           <p><pre>{`    f(8, 2, 9)
 def f(x, q, r):
   return r - x + q`}

@@ -138,7 +138,12 @@ function make_multiple_trials<TrialData>(TrialView: React.ComponentType<TrialPro
 
       let trial_i = this.state.trial_i;
       if (this.state.on_break) {
-        setTimeout(() => this.setState({on_break: false}), BREAK_TIME);
+        setTimeout(() => {
+          this.setState({on_break: false, waiting: true})
+          setTimeout(() => {
+            this.setState({waiting: false});
+          }, this.props.between_trials_time);
+        }, BREAK_TIME);
       }
 
       return <div>

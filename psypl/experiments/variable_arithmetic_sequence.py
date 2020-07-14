@@ -69,11 +69,11 @@ class VariableArithmeticSequenceExperiment(Experiment):
         # return "calculation"
 
     def eval_trial(self, trial, result):
-        result = result["response"]
+        response = result["response"]
         variables = trial["variables"]
-        i = result["i"]
+        i = response["i"]
         error = self.analyze_error(
-            variables[:i], variables[i]["expression"], result["value"]
+            variables[:i], variables[i]["expression"], response["value"]
         )
         return {"stage": i, "error": error}
 

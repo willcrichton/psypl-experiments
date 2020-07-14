@@ -26,12 +26,12 @@ export let TrialView = (props: TrialProps<TrialData>) => {
      ? <>
        <ValueInput value={answer} disabled={true} correct={parseInt(answer) == props.trial.answer}
                    answer={props.trial.answer} />
-       <ProgressBar duration={3000} />
+       <ProgressBar duration={2000} />
      </>
      : <ValueInput onEnter={(value) => {
        setTimeout(() => {
          props.finished({'response': value});
-       }, 3000);
+       }, 2000);
        set_answer(value);
      }} />}
   </div>

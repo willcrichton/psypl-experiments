@@ -2,7 +2,7 @@ import React from 'react';
 import {AccumulatingSequence, SequenceChildProps} from 'react-sequence-typed';
 
 import {instruction_templates, TaskDescriptionProps, SampleTrial} from '../instructions';
-import {TrialData, TrialView} from './function_basic';
+import {TrialData, TrialView, sample_criterion} from './function_basic';
 export {Experiment} from './function_basic';
 
 

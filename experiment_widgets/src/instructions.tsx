@@ -19,7 +19,7 @@ export let SampleTrial = (props: SampleTrialProps) => {
   switch (state) {
     case SampleState.Idle: {
       return <button onClick={() => set_state(SampleState.Waiting)} className={tried ? '' : 'primary'}>
-        Click here to try a sample trial
+        {tried ? "Click here to try a sample trial" : "Complete a sample trial to continue"}
       </button>;
     }
 
@@ -52,17 +52,17 @@ export let SampleTrial = (props: SampleTrialProps) => {
         }, 3000);
 
         return <div>
-          That's the end of one trial.
+          That's the end of the sample trial.
           <ProgressBar duration={3000} />
         </div>;
       } else {
         setTimeout(() => {
           set_state(SampleState.Playing);
-        }, 5000);
+        }, 4000);
 
         return <>
           <div>You must pass the sample trial to continue. Retrying...</div>
-          <ProgressBar duration={5000} />
+          <ProgressBar duration={4000} />
         </>;
       }
     }
@@ -79,7 +79,7 @@ export interface InstructionParams {
 }
 
 export let instruction_templates = {
-  'no-tools': <><strong>DO NOT</strong> use pen & paper, a digital notepad, or any other tool to help your memory during the experiment.,</>,
+  'no-tools': <><strong>DO NOT</strong> use pen & paper, a digital notepad, or any other tool to help your memory during the experiment.</>,
   'no-scratch': <>Do not use the input box as a scratchpad.</>
 };
 
@@ -101,7 +101,8 @@ export let Instructions = (props: {params: InstructionParams, experiment: any, s
         <li>You must give this experiment your undivided attention for its duration. A 30-second break will be provided every 10 trials.</li>
         <li>Please participate in an environment without distractions, either sounds or images.</li>
         <li>If you aren't sure of an answer, you should guess.</li>
-        {instructions}
+        <li>If you are inputting a negative number, you should write a minus sign before the number, e.g. "-5".</li>
+        {instructions.map((el, i) => <li key={i}>{el}</li>)}
       </ul>
 
       <p>

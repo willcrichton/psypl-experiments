@@ -13,7 +13,7 @@ from ..utils import (all_names, all_operators, interleave, rand_const, sample,
 
 class FunctionAlignExperiment(Experiment):
     Widget = experiment_widgets.FunctionBasicExperiment
-    all_n_var = [3, 4, 5, 6]
+    all_n_var = [4, 5, 6]
     all_participants = ["will"]
 
     class Condition(Enum):
@@ -29,7 +29,7 @@ class FunctionAlignExperiment(Experiment):
             for participant in self.all_participants for N_var in self.all_exp
         ])
 
-    def generate_experiment(self, N_trials=40):
+    def generate_experiment(self, N_trials=30):
         conditions = list(itertools.product(self.all_n_var, list(self.Condition)))
         n_conditions = len(conditions)
 
