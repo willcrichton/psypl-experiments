@@ -162,15 +162,22 @@ function make_multiple_trials<TrialData>(TrialView: React.ComponentType<TrialPro
   }
 }
 
-export function ValueInput(props: {onEnter: (s: string) => void, disabled?: boolean}) {
-  return (
+export function ValueInput(props: {onEnter?: (s: string) => void, disabled?: boolean, value?: string, correct?: boolean, answer?: any}) {
+  let correct = props.correct;
+  return <span className={(correct !== undefined ? (correct ? 'correct' : 'incorrect') : '')}>
     <input type="text"
            className="exp-input"
            autoFocus={true}
            disabled={props.disabled}
+           value={props.value}
            onKeyPress={(e) => {
-             if (e.key == 'Enter') {
+             if (e.key == 'Enter' && props.onEnter) {
                props.onEnter((e.target as HTMLInputElement).value);
              }}} />
-  );
+    {correct !== undefined
+    ? <span className='correct-indicator'>
+      {correct ? <>✓</> : <>✗ ({props.answer!})</>}
+    </span>
+    : null}
+  </span>;
 }

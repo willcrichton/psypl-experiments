@@ -8,7 +8,8 @@ export {Experiment} from './function_basic';
 
 let cond1_data: TrialData = {
   program: '((1 - 3) + (8 + (9 - 2)))',
-  call: undefined
+  call: undefined,
+  answer: 13
 };
 
 let cond2_data: TrialData = {
@@ -17,7 +18,8 @@ o = 1 + f
 x = 8 - 9
 p = x + o
 `,
-  call: 'p'
+  call: 'p',
+  answer: -2
 };
 
 let cond3_data: TrialData = {
@@ -27,19 +29,16 @@ def c():
 def u():
   return 3 + c()
 def a():
-  return 2 - 9
+  return 2 - 8
 def t():
   return c() - a()
 t()
 `,
-  call: 't()'
+  call: 't()',
+  answer: 12
 };
 
-let sample_criterion = (trial: TrialData, response: any) => {
-  return true;
-};
-
-export let TaskDescription = (props: TaskDescriptionProps) =>
+let TaskDescription = (props: TaskDescriptionProps) =>
   <div>
     <p>This is an experiment to test your ability to mentally compute the output of short Python programs. Your task is to compute the answer accurately, and as quickly as possible. Your time to answer will be measured.</p>
 
