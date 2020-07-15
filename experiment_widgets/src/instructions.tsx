@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import {ProgressBar} from './common';
+import {ProgressBar, ShowAnswersContext} from './common';
 
 enum SampleState { Idle, Waiting, Playing, Finished }
 
@@ -33,12 +33,14 @@ export let SampleTrial = (props: SampleTrialProps) => {
 
     case SampleState.Playing: {
       return <div className="indent">
-        <TrialView
-          trial={props.trial_data}
-          finished={(response: any) => {
-            set_response(response);
-            set_state(SampleState.Finished);
-          }} />
+        <ShowAnswersContext.Provider value={false}>
+          <TrialView
+            trial={props.trial_data}
+            finished={(response: any) => {
+              set_response(response);
+              set_state(SampleState.Finished);
+            }} />
+        </ShowAnswersContext.Provider>
       </div>;
     }
 

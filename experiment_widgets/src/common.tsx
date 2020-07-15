@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useContext} from 'react';
 import {Line} from 'rc-progress';
 
 function now(): number {
@@ -167,8 +167,11 @@ function make_multiple_trials<TrialData>(TrialView: React.ComponentType<TrialPro
   }
 }
 
+export const ShowAnswersContext = React.createContext(true);
+
 export function ValueInput(props: {onEnter?: (s: string) => void, disabled?: boolean, value?: string, correct?: boolean, answer?: any}) {
   let correct = props.correct;
+  let show_answers = useContext(ShowAnswersContext);
   return <span className={(correct !== undefined ? (correct ? 'correct' : 'incorrect') : '')}>
     <input type="text"
            className="exp-input"
@@ -181,7 +184,7 @@ export function ValueInput(props: {onEnter?: (s: string) => void, disabled?: boo
              }}} />
     {correct !== undefined
     ? <span className='correct-indicator'>
-      {correct ? <>✓</> : <>✗ ({props.answer!})</>}
+      {correct ? <>✓</> : <>✗ {show_answers ? <>({props.answer!})</> : null}</>}
     </span>
     : null}
   </span>;

@@ -23,8 +23,7 @@ p = x + o
 };
 
 let cond3_data: TrialData = {
-  program: `
-def c():
+  program: `def c():
   return 5 - 2
 def u():
   return 3 + c()
@@ -32,8 +31,7 @@ def a():
   return 2 - 8
 def t():
   return c() - a()
-t()
-`,
+t()`,
   call: 't()',
   answer: 12
 };
@@ -46,6 +44,10 @@ let TaskDescription = (props: TaskDescriptionProps) =>
 
     <p><pre>((1 - (3 + 2)) + 4)</pre></p>
 
+    <p>Your job is to compute the numeric value of the expression using only your brain (no calculator, pencil, etc.). For example, the expression above has a value of 0.</p>
+
+    <p>Then type the answer into the provided input box. Negative numbers should be written like "-5" with a minus sign in front. Once you're done, press "Enter".</p>
+
     <AccumulatingSequence>
       {({next}: SequenceChildProps) =>
         <div>
@@ -57,7 +59,8 @@ let TaskDescription = (props: TaskDescriptionProps) =>
           <p>The next kind of program is a straight-line sequence of variable assignments, like:</p>
           <p><pre>{`x = 3 + 2
 y = 1 - x
-z = y + 4`}
+z = y + 4
+z`}
           </pre></p>
           <SampleTrial TrialView={TrialView} on_finish={next} criterion={sample_criterion}
                        trial_data={cond2_data} />
@@ -65,13 +68,13 @@ z = y + 4`}
       {(_: SequenceChildProps) =>
         <div>
           <p>The last kind of program contains a sequence of function calls, for example:</p>
-          <p><pre>{`def a():
-  return 8 - 2
-def r():
-  return a() + 2
-def g():
-  return 1 - r()
-g()`}
+          <p><pre>{`def x():
+  return 3 + 2
+def y():
+  return 1 - x()
+def z():
+  return y() + 4
+z()`}
           </pre></p>
           <SampleTrial TrialView={TrialView} on_finish={props.done} criterion={sample_criterion}
                        trial_data={cond3_data} />

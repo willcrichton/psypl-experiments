@@ -10,7 +10,7 @@ from .function_align import FunctionAlignExperiment
 
 
 class FunctionDepthExperiment(FunctionAlignExperiment):
-    all_n_var = [4, 5, 6]
+    all_n_var = [5]
 
     class Condition(Enum):
         Parentheses = 1
@@ -72,7 +72,7 @@ class FunctionDepthExperiment(FunctionAlignExperiment):
                 op=choice(all_operators),
             )
 
-    def generate_experiment(self, N_trials=45):
+    def generate_experiment(self, N_trials=24):
         return super().generate_experiment(N_trials)
 
     def generate_trial(self, N_var, cond):
@@ -104,4 +104,4 @@ class FunctionDepthExperiment(FunctionAlignExperiment):
         answer = eval(call, globls, globls)
 
         call_str = None if cond == self.Condition.Parentheses else call
-        return {"program": program, "call": call_str, "cond": str(cond), "answer": answer}
+        return {"program": program, "call": call_str, "cond": str(cond), "answer": answer, "N_var": N_var}

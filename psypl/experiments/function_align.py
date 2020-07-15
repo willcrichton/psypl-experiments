@@ -13,7 +13,7 @@ from ..utils import (all_names, all_operators, interleave, rand_const, sample,
 
 class FunctionAlignExperiment(Experiment):
     Widget = experiment_widgets.FunctionBasicExperiment
-    all_n_var = [4, 5, 6]
+    all_n_var = [6]
     all_participants = ["will"]
 
     class Condition(Enum):
@@ -29,7 +29,7 @@ class FunctionAlignExperiment(Experiment):
             for participant in self.all_participants for N_var in self.all_exp
         ])
 
-    def generate_experiment(self, N_trials=30):
+    def generate_experiment(self, N_trials=20):
         conditions = list(itertools.product(self.all_n_var, list(self.Condition)))
         n_conditions = len(conditions)
 
@@ -40,7 +40,7 @@ class FunctionAlignExperiment(Experiment):
                 for _ in range(N_trials // n_conditions)
             ]),
             "between_trials_time":
-            2000,
+            4000,
         }
 
     def generate_trial(self, N_var, cond):
@@ -67,16 +67,15 @@ class FunctionAlignExperiment(Experiment):
         exec(fbody, globls, globls)
         answer = eval(fcall, globls, globls)
 
-        return {"program": program, "call": fcall, "cond": str(cond), "answer": answer}
+        return {"program": program, "call": fcall, "cond": str(cond), "answer": answer, "N_var": N_var}
 
-    def eval_response(self, N_var, experiment, results, participant):
-        df = []
-        for (trial, result) in zip(experiment["trials"], results):
-            df.append({
-                "participant": participant,
-                "N_var": N_var,
-                "correct": trial["answer"] == int(result["response"]),
-                "response_time": result["trial_time"],
-                "cond": trial["cond"],
-            })
-        return pd.DataFrame(df)
+    def eval_trial(self,trial, result):
+        try:
+            correct = trial["answer"] == int(result["response"])
+        except ValueError:
+            correct = False
+        return {
+            "N_var": len(trial['call'][2:-1].split(',')),
+            "correct": correct,
+            "cond": trial["cond"],
+        }
