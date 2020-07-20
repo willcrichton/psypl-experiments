@@ -6,7 +6,6 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "noEmitOnError": true,
-    "noUnusedLocals": true,
     "outDir": "lib",
     "resolveJsonModule": true,
     "rootDir": "src",

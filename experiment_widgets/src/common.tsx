@@ -169,19 +169,36 @@ function make_multiple_trials<TrialData>(TrialView: React.ComponentType<TrialPro
 
 export const ShowAnswersContext = React.createContext(true);
 
-export function ValueInput(props: {onEnter?: (s: string) => void, disabled?: boolean, value?: string, correct?: boolean, answer?: any}) {
+export interface ValueInputProps {
+  onEnter?: (s: string) => void,
+  onChange?: (s: string) => void,
+  disabled?: boolean,
+  value?: string,
+  correct?: boolean,
+  answer?: any,
+  input_ref?: React.RefObject<HTMLInputElement>,
+}
+
+export function ValueInput(props: ValueInputProps) {
   let correct = props.correct;
   let show_answers = useContext(ShowAnswersContext);
   return <span className={(correct !== undefined ? (correct ? 'correct' : 'incorrect') : '')}>
     <input type="text"
            className="exp-input"
+           ref={props.input_ref}
            autoFocus={true}
            disabled={props.disabled}
            value={props.value}
            onKeyPress={(e) => {
              if (e.key == 'Enter' && props.onEnter) {
                props.onEnter((e.target as HTMLInputElement).value);
-             }}} />
+             }
+           }}
+           onChange={(e) => {
+             if (props.onChange) {
+               props.onChange((e.target as HTMLInputElement).value);
+             }
+           }} />
     {correct !== undefined
     ? <span className='correct-indicator'>
       {correct ? <>✓</> : <>✗ {show_answers ? <>({props.answer!})</> : null}</>}

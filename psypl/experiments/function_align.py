@@ -75,7 +75,7 @@ class FunctionAlignExperiment(Experiment):
         except ValueError:
             correct = False
         return {
-            "N_var": len(trial['call'][2:-1].split(',')),
+            "N_var": len(trial['call'][2:-1].split(',')) if "N_var" not in trial else trial['N_var'],
             "correct": correct,
             "cond": trial["cond"],
         }

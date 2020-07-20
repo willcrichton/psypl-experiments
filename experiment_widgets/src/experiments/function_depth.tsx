@@ -33,7 +33,7 @@ def t():
   return c() - a()
 t()`,
   call: 't()',
-  answer: 12
+  answer: 9
 };
 
 let TaskDescription = (props: TaskDescriptionProps) =>
@@ -86,5 +86,4 @@ let instructions = [
   <>{instruction_templates['no-tools']} {instruction_templates['no-scratch']}</>
 ];
 
-export let instruction_params =
-  {TaskDescription, instructions};
+export let instruction_params = {TaskDescription, instructions};

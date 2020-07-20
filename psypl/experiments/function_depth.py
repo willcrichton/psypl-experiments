@@ -1,4 +1,3 @@
-
 from dataclasses import dataclass
 from enum import Enum
 from random import choice, randint

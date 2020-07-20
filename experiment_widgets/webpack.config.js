@@ -66,7 +66,9 @@ const experiments = fs.readdirSync('src/experiments').map((fname) => {
   };
 });
 
-module.exports = _.find(experiments, (e) => e.output.filename == 'function_depth.js');
+module.exports = _.find(experiments, (e) => e.output.filename == 'variable_cued_recall.js');
+
+//module.exports = experiments;
 
 /* module.exports = [
   *   // Jupyter extension

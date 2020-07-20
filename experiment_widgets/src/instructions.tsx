@@ -108,7 +108,7 @@ export let Instructions = (props: {params: InstructionParams, experiment: any, s
       </ul>
 
       <p>
-        I understand the task and instructions above:
+        By checking the box below, you confirm that you understand the task and instructions above.
         <input type="checkbox" onChange={(e) => set_box_checked(e.target.checked)} />
       </p>
 

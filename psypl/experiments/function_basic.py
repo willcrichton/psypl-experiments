@@ -14,9 +14,8 @@ from ..utils import (all_names, all_operators, rand_const, sample, shuffle,
 
 class FunctionBasicExperiment(Experiment):
     Widget = experiment_widgets.FunctionBasicExperiment
-    all_n_var = [2, 3, 4]
+    all_n_var = [4]
     all_participants = ["will"]
-    num_trials = 40
 
     class Condition(Enum):
         NoFunction = 1
@@ -24,19 +23,7 @@ class FunctionBasicExperiment(Experiment):
         RenameArgsFunction = 3
         # RandomOrderFunction = 4
 
-    def exp_name(self, N_var, N_trials, participant):
-        return f"function_basic_{participant}_{N_var}"
-
-    def results(self):
-        return pd.concat(
-            [
-                self.process_results(N_var, self.num_trials, participant=participant)
-                for participant in self.all_participants
-                for N_var in self.all_exp
-            ]
-        )
-
-    def generate_experiment(self, N_trials=45):
+    def generate_experiment(self, N_trials=24):
         conditions = list(itertools.product(self.all_n_var, list(self.Condition)))
         return {
             "trials": shuffle(
@@ -127,16 +114,8 @@ class FunctionBasicExperiment(Experiment):
             "answer": eval(final_expr, globls, globls),
         }
 
-    def eval_response(self, N_var, experiment, results, participant):
-        df = []
-        for (trial, result) in zip(experiment["trials"], results):
-            df.append(
-                {
-                    "participant": participant,
-                    "N_var": N_var,
-                    "correct": trial["answer"] == try_int(result["response"]),
-                    "response_time": result["trial_time"],
-                    "condition": trial["condition"].split(".")[1],
-                }
-            )
-        return pd.DataFrame(df)
+    def eval_trial(self, trial, result):
+        return {
+            "correct": trial["answer"] == try_int(result["response"]),
+            "cond": trial["condition"].split(".")[1],
+        }
