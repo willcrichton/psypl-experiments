@@ -33,7 +33,7 @@ let stage_generator = (props: TrialStageProps<TrialData, number>) => {
         props.trial_finished({
           response: {i, value}
         });
-      }, trial.wait_time);
+      }, trial.wait_time * 2);
       setState(StageState.Incorrect);
     }
   };

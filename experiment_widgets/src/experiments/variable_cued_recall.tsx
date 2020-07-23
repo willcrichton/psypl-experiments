@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react';
+import React, {useState, useEffect} from 'react';
 import _ from 'lodash';
 
 import {TrialStageProps, make_trial_sequence, make_multiple_trials, ProgressBar} from '../common';
@@ -17,13 +17,22 @@ interface TrialState {
 export
 let code_stage = (props: TrialStageProps<TrialData, TrialState>) => {
   let trial = props.trial;
-  let prog = trial.variables.map((v) => `${v.variable} = ${v.value}`).join('\n');
-  useEffect(() => { setTimeout(() => { props.next_stage(); }, trial.presentation_time); }, []);
+  let [cur_var, set_cur_var] = useState(-1);
+  let v = trial.variables[cur_var];
 
-  return <div>
-    <pre>{prog}</pre>
-    <ProgressBar duration={trial.presentation_time} />
-  </div>
+  setTimeout(() => {
+    if (cur_var < trial.variables.length - 1) {
+      set_cur_var(cur_var + 1);
+    } else {
+      props.next_stage();
+    }
+  }, 2000);
+
+  return <div>{
+    cur_var == -1
+    ? <>This sequence contains {trial.variables.length} variables. <ProgressBar duration={2000} /></>
+    : <pre>{v.variable} = {v.value}</pre>
+  }</div>
 }
 
 let input_stage = (props: TrialStageProps<TrialData, TrialState>) => {
@@ -114,7 +123,9 @@ let TaskDescription = (props: TaskDescriptionProps) =>
 q = 8
 r = 2`}</pre></div>
 
-      <p>Then you will be prompted with the same variables, randomly ordered. Your task is to enter the corresponding number. In the above example, if prompted for <code>q</code>, you should enter <code>8</code>.</p>
+      <p>You will have two seconds per variable to remember it. Then you will be prompted with the same variables, randomly ordered. Your task is to remember and enter the corresponding number. In the above example, if prompted for <code>q</code>, you should enter <code>8</code>.</p>
+
+      <p>You will see sequences containing single-letter variables (<code>x</code>, <code>q</code>), nonsense syllables (<code>jep</code>, <code>zid</code>), and English nouns (<code>market</code>, <code>cherries</code>).</p>
 
       <SampleTrial TrialView={TrialView} criterion={sample_criterion} trial_data={sample_data}
         on_finish={props.done} />

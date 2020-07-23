@@ -116,6 +116,6 @@ class FunctionBasicExperiment(Experiment):
 
     def eval_trial(self, trial, result):
         return {
-            "correct": trial["answer"] == try_int(result["response"]),
+            "correct": 1 if trial["answer"] == try_int(result["response"]) else 0,
             "cond": trial["condition"].split(".")[1],
         }

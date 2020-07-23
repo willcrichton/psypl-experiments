@@ -42,11 +42,17 @@ def record_results():
     participant = data['participant']
     results = data['results']
     description = data['description']
+    demographics = data['demographics']
+    duration = data['duration']
 
     experiments_db.update_one(
         {'experiment_name': experiment.__class__.__name__},
-        {'$push': {f'participants.{participant}.trials': description['trials'],
-                   f'participants.{participant}.results': results}})
+        {'$set': {f'participants.{participant}': {
+            'trials': description['trials'],
+            'duration': duration,
+            'results': results,
+            'demographics': demographics}
+        }})
 
     return ''
 
@@ -74,5 +80,14 @@ def resetdb():
     #     experiments_db.update_one(
     #         {'experiment_name': exp.__name__},
     #         {'$set': {'participants': {}}})
+    return 'ok'
+
+@app.route('/api/reset_exp')
+def resetexp():
+    # experiment_name = request.args.get('experiment')
+    # experiment = get_experiment(experiment_name)
+    # experiments_db.update_one(
+    #     {'experiment_name': experiment.__class__.__name__},
+    #     {'$set': {'participants': {}}})
     return 'ok'
          

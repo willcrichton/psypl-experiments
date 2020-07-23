@@ -1,18 +1,75 @@
 from random import choice
+from enum import Enum
 
 import pandas as pd
 from scipy.stats import wasserstein_distance
 
 import experiment_widgets
+import itertools
 
 from ..base import Experiment
-from ..utils import all_names, rand_const, sample, shuffle, shuffle_unique
+from ..utils import all_names, rand_const, sample, shuffle, shuffle_unique, try_int
 
+# https://www.jstor.org/stable/1413449?seq=2#metadata_info_tab_contents
+nonsense_syllables = [
+    "vus",
+    "yif",
+    "mav",
+    "jep",
+    "vob",
+    "wof",
+    "feg",
+    "tib",
+    "nuz",
+    "bof",
+    "jed",
+    "kib",
+    "vel",
+    "zid",
+    "bol",
+    "sef",
+    "yab",
+    "kub",
+    "tef",
+    "nad",
+]
+
+# https://www.randomlists.com/nouns?dup=false&qty=25
+words = [s.strip() for s in """roll
+curtain
+plot
+playground
+cave
+furniture
+market
+cherries
+soda
+coast
+ice
+basketball
+card
+argument
+tax
+push
+geese
+iron
+industry
+ticket
+board
+cabbage
+vacation
+bait
+visitor""".split('\n')]
 
 class VariableCuedRecallExperiment(Experiment):
-    all_n_var = [3, 4, 5, 6]
+    all_n_var = [4, 7]
     all_participants = ["will"]
     Widget = experiment_widgets.VariableCuedRecallExperiment
+
+    class Condition(Enum):
+        Letter = 1
+        Syllable = 2
+        Word = 3
 
     def exp_name(self, N_var, N_trials, participant):
         return f"cuedrecall2_{participant}_{N_var}_{N_trials}"
@@ -31,8 +88,8 @@ class VariableCuedRecallExperiment(Experiment):
         correct = sum(
             [
                 1
-                    if "value" in response
-                and gt[response["variable"]] == int(response["value"])
+                if "value" in response
+                and gt[response["variable"]] == try_int(response["value"])
                     else 0
                     for response in result["response"]
             ]
@@ -41,24 +98,40 @@ class VariableCuedRecallExperiment(Experiment):
         return {
             "correct_raw": correct, 
             "correct_frac": correct / N_var, 
-            "N_var": N_var
+            "N_var": N_var,
+            "cond": trial['cond']
         }
 
-    def generate_experiment(self, N_trials=20):
-        trial_n_var = [N for N in self.all_n_var for _ in range(N_trials // len(self.all_n_var))]
+    def generate_experiment(self, N_trials=24):
+        conditions = list(itertools.product(self.all_n_var, list(self.Condition)))
+        n_conditions = len(conditions)
+
         return {
-            "trials": [self.generate_trial(N_var) for N_var in shuffle(trial_n_var)],
+            "trials":
+            shuffle([
+                self.generate_trial(*conds) for conds in conditions
+                for _ in range(N_trials // n_conditions)
+            ]),
             "between_trials_time": 4000,
         }
 
-    def generate_trial(self, N_var):
-        names = sample(all_names, k=N_var)
+    def generate_trial(self, N_var, cond):
+        if cond == self.Condition.Letter:
+            l = all_names
+        elif cond == self.Condition.Syllable:
+            l = nonsense_syllables
+        elif cond == self.Condition.Word:
+            l = words
+            
+        names = sample(l, k=N_var)
+        values = sample(list(range(1, 10)), k=N_var)
         return {
             "variables": [
-                {"variable": names[i], "value": rand_const()} for i in range(N_var)
+                {"variable": name, "value": value} for name, value in zip(names, values)
             ],
             "recall_variables": shuffle_unique(names),
             "presentation_time": N_var * 1500,
+            "cond": str(cond)
         }
 
     def simulate_trial(self, trial, model):

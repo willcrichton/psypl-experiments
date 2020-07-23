@@ -42,7 +42,7 @@ const experiments = fs.readdirSync('src/experiments').map((fname) => {
     plugins: [
       new webpack.DefinePlugin({
         EXPERIMENT_NAME: JSON.stringify(exp_name),
-        MTURK: false
+        MTURK: true
       }),
       new HtmlWebpackPlugin({
         template: 'src/standalone.html',
@@ -66,9 +66,9 @@ const experiments = fs.readdirSync('src/experiments').map((fname) => {
   };
 });
 
-module.exports = _.find(experiments, (e) => e.output.filename == 'variable_cued_recall.js');
+//module.exports = _.find(experiments, (e) => e.output.filename == 'variable_arithmetic_sequence.js');
 
-//module.exports = experiments;
+module.exports = experiments;
 
 /* module.exports = [
   *   // Jupyter extension

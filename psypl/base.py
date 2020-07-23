@@ -54,12 +54,18 @@ class Experiment:
         mongo_data = collection.find_one({'experiment_name': self.__class__.__name__})['participants']
         results = []
         for participant, data in mongo_data.items():
-            for trial_index, (trial, result) in enumerate(zip(data['trials'][0], data['results'][0])):
+            if isinstance(data['trials'][0], list):
+                it = zip(data['trials'][0], data['results'][0])
+            else:
+                it = zip(data['trials'], data['results'])
+
+            for trial_index, (trial, result) in enumerate(it):
                 results.append({
                     'participant': participant,
                     'mturk': 'mturk-' in participant,
                     'trial_index': trial_index,
                     "duration": result['trial_time'] / 1000.,
+                    **(data['demographics'] if 'demographics' in data else {}),
                     **self.eval_trial(trial, result)
                 })
         return pd.DataFrame(results)

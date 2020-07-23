@@ -19,10 +19,8 @@ export function get_experiment(): Promise<any> {
   );
 }
 
-export function record_results(description: any, participant: string, results: any) {
-  axios.post(
-      `${BASE_URL}/record_results`,
-      {experiment: EXPERIMENT_NAME, description, participant, results});
+export function record_results(data: any) {
+  axios.post(`${BASE_URL}/record_results`, data);
 }
 
 let NameForm = (props: {next: (name: string) => void}) => {
@@ -103,10 +101,10 @@ let Pretest = (props: SeqProps) => {
         <Question name="1" answer={2} attempt={attempt} set_correct={(c) => set_correct([c, correct[1]])}>
           what is the value of <code>z</code> in the following program?
           <pre>{`def f(w, q):
-          return q - w
+  return q - w
 
-          x = 1
-          z = f(x, 3)`}</pre>
+x = 1
+z = f(x, 3)`}</pre>
         </Question>
         <Question name="2" answer={4} attempt={attempt} set_correct={(c) => set_correct([correct[0], c])}>
           if we call function <code>c()</code>, how many times is the function <code>a()</code> called?
@@ -125,6 +123,34 @@ def c():
                   : null)}
       </>}
 
+  </div>
+};
+
+let Demographics = (props: {save_demographics: (data: any) => void}) => {
+  let [age, set_age] = useState<string|null>(null);
+  let [experience, set_experience] = useState<string|null>(null);
+  let save = () => {
+    if (age == null || experience == null) {
+      alert("Please answer both questions before proceeding.");
+    } else {
+      props.save_demographics({age, experience});
+    }
+  };
+
+  return <div>
+    <h1>Demographic information</h1>
+    <p>Please answer the following questions so we can understand your background.</p>
+    <p>
+      <strong>What is your age?</strong>
+      {["<20", "20-30", "30-40", "40-50", "50+"].map((label) =>
+        <div><input type="radio" name="age" onChange={() => set_age(label)} /> {label}</div>)}
+    </p>
+    <p>
+      <strong>How many years of programming experience do you have?</strong><br />
+      {["<1", "1-3", "3-5", "5+"].map((label) =>
+        <div><input type="radio" name="experience" onChange={() => set_experience(label)} /> {label}</div>)}
+    </p>
+    <button className='primary' onClick={save}>Next</button>
   </div>
 };
 
@@ -148,7 +174,7 @@ if (MTURK) {
 
 
 class ExperimentContainer extends React.Component {
-  state = { participant, experiment: null, finished: false }
+  state = { participant, experiment: null, demographics: null, finished: false, start: Date.now() }
   results: any[] = []
 
   componentDidMount() {
@@ -163,7 +189,15 @@ class ExperimentContainer extends React.Component {
   }
 
   save_results() {
-    record_results(this.state.experiment!, this.state.participant!, this.results);
+    let data = {
+      experiment: EXPERIMENT_NAME,
+      description: this.state.experiment!,
+      participant: this.state.participant!,
+      results: this.results,
+      demographics: this.state.demographics,
+      duration: Date.now() - this.state.start
+    };
+    record_results(data);
     this.setState({finished: true});
   }
 
@@ -177,6 +211,11 @@ class ExperimentContainer extends React.Component {
          {/* ConsentForm */}
 
          {Pretest}
+
+         {(props: SeqProps) => <Demographics save_demographics={(data) => {
+           this.setState({demographics: data});
+           props.next()
+         }} />}
 
          {(props: SeqProps) => <Instructions start={props.next} experiment={this.state.experiment}
                                             params={instruction_params} />}

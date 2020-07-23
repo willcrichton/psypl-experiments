@@ -76,6 +76,6 @@ class FunctionAlignExperiment(Experiment):
             correct = False
         return {
             "N_var": len(trial['call'][2:-1].split(',')) if "N_var" not in trial else trial['N_var'],
-            "correct": correct,
+            "correct": 1 if correct else 0,
             "cond": trial["cond"],
         }
