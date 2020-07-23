@@ -1,4 +1,8 @@
 def get_word_pattern(word):
+    """
+    ????
+    """
+
     word = word.upper()
     next_num = 0
     letter_nums = {}

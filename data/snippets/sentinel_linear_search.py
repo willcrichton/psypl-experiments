@@ -1,6 +1,8 @@
-
-
 def sentinel_linear_search(sequence, target):
+    """
+    Searches for the index of a value in a list
+    """
+
     sequence.append(target)
 
     index = 0

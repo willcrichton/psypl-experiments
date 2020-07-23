@@ -1,6 +1,9 @@
+def check_diff(string1, string2, count):
+    """
+    Returns whether the number of different characters in string1/string2
+    is the same as count
+    """
 
-
-def is_for_table(string1, string2, count):
     l1 = list(string1)
     l2 = list(string2)
     count_n = 0

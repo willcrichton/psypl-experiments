@@ -1,5 +1,7 @@
-
-def bisect_left(sorted_collection, item, lo=0, hi=None):
+def binary_search(sorted_collection, item, lo=0, hi=None):
+    """
+    Returns the index of the smallest value greater than the item
+    """
     if hi is None:
         hi = len(sorted_collection)
 

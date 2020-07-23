@@ -1,4 +1,7 @@
 def generate_table(key):
+    """
+    ????
+    """
 
     alphabet = "ABCDEFGHIKLMNOPQRSTUVWXYZ"
     table = []

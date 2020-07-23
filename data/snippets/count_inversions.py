@@ -1,5 +1,8 @@
-
-def count_inversions_bf(arr):
+def count_inversions(arr):
+    """
+    Returns the number of pairs of elements where one is higher in the array
+    but less in value
+    """
 
     num_inversions = 0
     n = len(arr)

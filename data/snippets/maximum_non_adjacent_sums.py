@@ -1,5 +1,8 @@
-
 def maximum_non_adjacent_sum(nums):
+    """
+    ????
+    """
+
     if not nums:
         return 0
     max_including = nums[0]

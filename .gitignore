@@ -7,3 +7,4 @@ __pycache__
 server/static/experiments
 server/static/experiments_dev
 db
+.Rproj.user
