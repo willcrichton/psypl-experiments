@@ -1,3 +1,4 @@
+# {"input": "\"attack\""}
 def is_palindrome(s):
     """
     Returns true if the string is a palindrome (same spelling forward and reverse)

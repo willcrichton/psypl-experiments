@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {AccumulatingSequence, SequenceChildProps} from 'react-sequence-typed';
 
 import {TrialProps, make_multiple_trials, ValueInput, ProgressBar} from '../common';
@@ -7,14 +7,27 @@ import {instruction_templates, TaskDescriptionProps, SampleTrial} from '../instr
 export interface TrialData {
   program: string,
   call?: string,
-  answer: number
+  answer: string
 }
 
 export let sample_criterion = (trial: TrialData, response: any) => {
-  return parseInt(response.response) == trial.answer;
+  let answer = response.response.trim();
+  if (answer === null) {
+    return false;
+  }
+
+  if (answer[0] == '"' || answer[0] == "'") {
+    answer = answer.slice(1, answer.length - 1);
+  }
+
+  return answer.toLowerCase() == trial.answer.toLowerCase();
 };
 
-export let TrialView = (props: TrialProps<TrialData>) => {
+export let TrialView = (timeout: number, answer_time: number) => (props: TrialProps<TrialData>) => {
+  useEffect(() => {
+    const timer = setTimeout(() => props.finished({'response': ''}), timeout * 1000);
+    return () => clearTimeout(timer);
+  }, []);
   let [answer, set_answer] = useState<string | null>(null);
   return <div>
     <pre>{props.trial.program}</pre>
@@ -25,27 +38,30 @@ export let TrialView = (props: TrialProps<TrialData>) => {
     </div>
     {answer !== null
      ? <>
-       <ValueInput value={answer} disabled={true} correct={parseInt(answer) == props.trial.answer}
+       <ValueInput value={answer} disabled={true} large={true} correct={sample_criterion(props.trial, {response: answer})}
                    answer={props.trial.answer} />
-       <ProgressBar duration={2000} />
+       <ProgressBar key={0} duration={answer_time*1000} />
      </>
-     : <ValueInput onEnter={(value) => {
-       setTimeout(() => {
-         props.finished({'response': value});
-       }, 2000);
-       set_answer(value);
-     }} />}
+     : <>
+       <ValueInput large={true} onEnter={(value) => {
+         setTimeout(() => {
+           props.finished({'response': value});
+         }, answer_time*1000);
+         set_answer(value);
+       }} />
+       <ProgressBar key={1} duration={timeout*1000} />
+     </>}
   </div>
 };
 
-export let Experiment = make_multiple_trials<TrialData>(TrialView);
+export let Experiment = make_multiple_trials<TrialData>(TrialView(90, 2));
 
 let cond1_data: TrialData = {
   program: `f = 9
 e = 1 + f
 x = f - e`,
   call: 'x',
-  answer: -1
+  answer: '-1'
 };
 
 let cond2_data: TrialData = {
@@ -60,7 +76,7 @@ s = n()
 e = p(s)
 f = c(e, s)`,
   call: 'f',
-  answer: 16
+  answer: '16'
 };
 
 let cond3_data: TrialData = {
@@ -75,7 +91,7 @@ t = v()
 w = o(t)
 g = b(t, w)`,
   call: 'g',
-  answer: -2
+  answer: '-2'
 };
 
 let TaskDescription = (props: TaskDescriptionProps) =>

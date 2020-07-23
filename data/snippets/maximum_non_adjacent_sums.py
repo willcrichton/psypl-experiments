@@ -1,3 +1,4 @@
+# {"skip": true}
 def maximum_non_adjacent_sum(nums):
     """
     ????

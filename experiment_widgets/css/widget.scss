@@ -75,6 +75,10 @@ $light-color: #f0faff;
 
     .exp-input {
         width: 40px;
+
+        &.large {
+            width: 400px;
+        }
     }
 
     .trial-counter {
@@ -92,7 +96,7 @@ $light-color: #f0faff;
     }
 
     .trial {
-        min-height: 300px;
+        min-height: 150px;
     }
 
     button, input[type=submit] {

@@ -1,3 +1,4 @@
+# {"skip": true}
 def wiggle_sort(nums):
     """
     Sorts a list of numbers

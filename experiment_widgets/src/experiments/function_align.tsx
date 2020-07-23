@@ -11,7 +11,7 @@ let cond1_data: TrialData = {
 
 r(3, 1, 5, 2)`,
   call: 'r(3, 1, 5, 2)',
-  answer: 7
+  answer: '7'
 }
 
 let cond2_data: TrialData = {
@@ -19,7 +19,7 @@ let cond2_data: TrialData = {
 def t(e, m, x, q):
   return m - e - q + x`,
   call: 't(2, 7, 6, 3)',
-  answer: 6
+  answer: '6'
 }
 
 let TaskDescription = (props: TaskDescriptionProps) =>

@@ -1,3 +1,4 @@
+# {"skip": true}
 def invert_dictionary(obj):
   """
   Returns a dictionary of values mapped to lists of keys

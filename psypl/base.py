@@ -38,8 +38,8 @@ class Experiment:
         prev_results["results"].extend(results)
         pcache.set(pkey, prev_results)
 
-    def run_experiment(self, participant, N_var, N_trials=20, dummy=False):
-        exp_desc = self.generate_experiment(N_var=N_var, N_trials=N_trials)
+    def run_experiment(self, N_trials=20, dummy=False):
+        exp_desc = self.generate_experiment(N_trials=N_trials)
         exp_widget = self.Widget(experiment=json.dumps(exp_desc), results=json.dumps([]))
 
         def on_result_change(_):

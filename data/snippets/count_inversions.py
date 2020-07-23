@@ -1,3 +1,4 @@
+# {"input": "[3, 7, 2, 10, 1]"}
 def count_inversions(arr):
     """
     Returns the number of pairs of elements where one is higher in the array

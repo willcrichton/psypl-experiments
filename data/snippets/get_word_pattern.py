@@ -1,3 +1,4 @@
+# {"input": "\"TOILET\""}
 def get_word_pattern(word):
     """
     ????

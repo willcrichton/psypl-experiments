@@ -1,3 +1,4 @@
+# {"input": "[20, 8, 4, 9, 1], 8"}
 def sentinel_linear_search(sequence, target):
     """
     Searches for the index of a value in a list

@@ -176,6 +176,7 @@ export interface ValueInputProps {
   value?: string,
   correct?: boolean,
   answer?: any,
+  large?: boolean,
   input_ref?: React.RefObject<HTMLInputElement>,
 }
 
@@ -184,7 +185,7 @@ export function ValueInput(props: ValueInputProps) {
   let show_answers = useContext(ShowAnswersContext);
   return <span className={(correct !== undefined ? (correct ? 'correct' : 'incorrect') : '')}>
     <input type="text"
-           className="exp-input"
+           className={`exp-input ${props.large ? 'large' : ''}`}
            ref={props.input_ref}
            autoFocus={true}
            disabled={props.disabled}

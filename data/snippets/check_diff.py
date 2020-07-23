@@ -1,3 +1,4 @@
+# {"input": "\"ABCDE\", \"EDCBA\", 4"}
 def check_diff(string1, string2, count):
     """
     Returns whether the number of different characters in string1/string2

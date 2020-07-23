@@ -1,3 +1,4 @@
+# {"input": "\"FOOT?\""}
 def generate_table(key):
     """
     ????
@@ -14,4 +15,4 @@ def generate_table(key):
         if char not in table:
             table.append(char)
 
-    return table
+    return "".join(table)

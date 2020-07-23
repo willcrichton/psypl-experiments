@@ -9,7 +9,7 @@ export {Experiment} from './function_basic';
 let cond1_data: TrialData = {
   program: '((1 - 3) + (8 + (9 - 2)))',
   call: undefined,
-  answer: 13
+  answer: '13'
 };
 
 let cond2_data: TrialData = {
@@ -19,7 +19,7 @@ x = 8 - 9
 p = x + o
 `,
   call: 'p',
-  answer: -2
+  answer: '-2'
 };
 
 let cond3_data: TrialData = {
@@ -33,7 +33,7 @@ def t():
   return c() - a()
 t()`,
   call: 't()',
-  answer: 9
+  answer: '9'
 };
 
 let TaskDescription = (props: TaskDescriptionProps) =>

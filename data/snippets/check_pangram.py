@@ -1,3 +1,4 @@
+# {"input": "\"the quick red fox jumped over the lazy\""}
 def check_pangram(input_str):
     """
     Checks whether the input string is a pangram (contains all letters a-z)

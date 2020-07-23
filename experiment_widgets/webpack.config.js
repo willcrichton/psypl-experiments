@@ -22,7 +22,7 @@ const resolve = {
   extensions: [".webpack.js", ".web.js", ".ts", ".tsx", ".js", ".scss"],
 
   // default to make TSC happy
-  alias: { experiment: path.resolve(__dirname, 'src/experiments/variable_span.tsx') }
+  alias: { experiment: path.resolve(__dirname, 'src/experiments/variable_cued_recall.tsx') }
 };
 
 const optimization = {

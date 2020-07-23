@@ -1,3 +1,4 @@
+# {"skip": true}
 def count(arr):
   """
   Count the frequency of elements in an array

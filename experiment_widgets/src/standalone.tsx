@@ -210,12 +210,12 @@ class ExperimentContainer extends React.Component {
       : <Sequence>
          {/* ConsentForm */}
 
-         {Pretest}
+         {/* Pretest */}
 
-         {(props: SeqProps) => <Demographics save_demographics={(data) => {
+         {/* (props: SeqProps) => <Demographics save_demographics={(data) => {
            this.setState({demographics: data});
            props.next()
-         }} />}
+         }} /> */}
 
          {(props: SeqProps) => <Instructions start={props.next} experiment={this.state.experiment}
                                             params={instruction_params} />}
