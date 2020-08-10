@@ -83,6 +83,15 @@ class SemanticNamesExperiment(Experiment):
             ]),
             'between_trials_time': 5000
         }
+
+    def eval_trial(self, trial, result):
+        correct = result['response'].lower() == trial['answer'].lower()
+        return {
+            'function': trial['function'],
+            'correct': 1 if correct else 0,
+            'answer': result['response'],
+            'cond': trial['cond']
+        }
     
     def generate_trial(self, program, cond):
         metadata = json.loads(program.header[0].comment.value[1:])
@@ -104,5 +113,6 @@ class SemanticNamesExperiment(Experiment):
             'call': call,
             'function': name,
             'cond': str(cond),
-            'answer': str(answer)
+            'answer': str(answer),
+            'schema': metadata['schema']
         }

@@ -1,4 +1,4 @@
-# {"input": "\"TOILET\""}
+# {"input": "\"TOILET\"", "schema": false}
 def get_word_pattern(word):
     """
     ????

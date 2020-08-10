@@ -66,9 +66,9 @@ const experiments = fs.readdirSync('src/experiments').map((fname) => {
   };
 });
 
-//module.exports = _.find(experiments, (e) => e.output.filename == 'variable_arithmetic_sequence.js');
+module.exports = _.find(experiments, (e) => e.output.filename == 'variable_count.js');
 
-module.exports = experiments;
+//module.exports = experiments;
 
 /* module.exports = [
   *   // Jupyter extension
@@ -85,4 +85,4 @@ module.exports = experiments;
     *     resolve,
     *     optimization
     *   },
-  * ].concat(experiments); */
+  * ] //.concat(experiments); */

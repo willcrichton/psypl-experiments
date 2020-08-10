@@ -7,6 +7,8 @@ from .variable_cued_recall import VariableCuedRecallExperiment
 from .variable_arithmetic_sequence import VariableArithmeticSequenceExperiment
 from .variable_span import VariableSpanExperiment
 from .semantic_names import SemanticNamesExperiment
+from .variable_distance import VariableDistanceExperiment
+from .variable_count import VariableCountExperiment
 
 EXPERIMENTS = [
     FunctionAlignExperiment,
@@ -17,5 +19,7 @@ EXPERIMENTS = [
     VariableArithmeticSequenceExperiment,
     VariableCuedRecallExperiment,
     VariableSpanExperiment,
-    SemanticNamesExperiment
+    SemanticNamesExperiment,
+    VariableDistanceExperiment,
+    VariableCountExperiment
 ]

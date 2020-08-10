@@ -1,4 +1,4 @@
-# {"input": "[2, 0, 4, 3, 0, 1]"}
+# {"input": "[2, 0, 4, 3, 0, 1]", "schema": true}
 def mode(input_list):
     """
     Returns the statistical mode of the list

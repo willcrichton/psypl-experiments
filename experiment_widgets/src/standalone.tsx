@@ -92,6 +92,8 @@ let Pretest = (props: SeqProps) => {
     set_attempt(attempt + 1);
   };
 
+  let onto_next_stage = attempt > 0 && last_correct[0] && last_correct[1];
+
   return <div>
     <h1>Python Pretest</h1>
     <p>For this experiment, we require that you understand basic Python syntax (as said in the title and description of the HIT). You need to correctly answer the following two questions. Both answers should be a one-digit number.</p>
@@ -115,8 +117,8 @@ def b():
 def c():
   return b() + b()`}</pre>
         </Question>
-        <button className='primary' onClick={check_answers}>Submit answers</button>
-        {attempt > 0 && last_correct[0] && last_correct[1]
+        <button className='primary' onClick={check_answers} disabled={onto_next_stage}>Submit answers</button>
+        {onto_next_stage
                  ? <p><strong>You passed the pre-test. Proceeding to the experiment... <ProgressBar duration={3000} /></strong></p>
                  : (attempt == 1
                   ? <p><strong>At least one answer was incorrect. You may try once more to correct your response.</strong></p>
@@ -210,12 +212,12 @@ class ExperimentContainer extends React.Component {
       : <Sequence>
          {/* ConsentForm */}
 
-         {/* Pretest */}
+         {Pretest}
 
-         {/* (props: SeqProps) => <Demographics save_demographics={(data) => {
+         {(props: SeqProps) => <Demographics save_demographics={(data) => {
            this.setState({demographics: data});
            props.next()
-         }} /> */}
+         }} />}
 
          {(props: SeqProps) => <Instructions start={props.next} experiment={this.state.experiment}
                                             params={instruction_params} />}

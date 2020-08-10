@@ -1,4 +1,4 @@
-# {"input": "\"FOOT?\""}
+# {"input": "\"FOOT?\"", "schema": false}
 def generate_table(key):
     """
     ????

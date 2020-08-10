@@ -50,6 +50,9 @@ class Experiment:
         exp_widget.observe(on_result_change)
         return exp_widget
 
+    def init_db(self, db):
+        db.insert_one({'experiment_name': self.__class__.__name__, 'participants': {}})
+
     def get_mongo_results(self, collection):
         mongo_data = collection.find_one({'experiment_name': self.__class__.__name__})['participants']
         results = []
@@ -65,7 +68,7 @@ class Experiment:
                     'mturk': 'mturk-' in participant,
                     'trial_index': trial_index,
                     "duration": result['trial_time'] / 1000.,
-                    **(data['demographics'] if 'demographics' in data else {}),
+                    **(data['demographics'] if 'demographics' in data and data['demographics'] is not None else {}),
                     **self.eval_trial(trial, result)
                 })
         return pd.DataFrame(results)
