@@ -1,5 +1,6 @@
 import experiment_widgets
 from ..base import Experiment
+from ..utils import shuffle, random_tree
 
 class TracingExternalExperiment(Experiment):
     Widget = experiment_widgets.TracingExternalExperiment
@@ -18,7 +19,9 @@ class TracingExternalExperiment(Experiment):
         }
 
     def generate_trial(self, _):
-        return {
-            'foo': 'bar'
-        }
+        t = random_tree(6)
+        defs, call = t.to_variable_str()
 
+        return {
+            'program': ''
+        }

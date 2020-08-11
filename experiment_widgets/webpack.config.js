@@ -66,23 +66,23 @@ const experiments = fs.readdirSync('src/experiments').map((fname) => {
   };
 });
 
-module.exports = _.find(experiments, (e) => e.output.filename == 'variable_count.js');
+//module.exports = _.find(experiments, (e) => e.output.filename == 'variable_count.js');
 
 //module.exports = experiments;
 
-/* module.exports = [
-  *   // Jupyter extension
-  *   {
-    *     entry: './src/extension.ts',
-    *     output: {
-      *       filename: 'index.js',
-      *       path: path.resolve(__dirname, 'experiment_widgets', 'nbextension', 'static'),
-      *       libraryTarget: 'amd'
-      *     },
-    *     module: { rules },
-    *     devtool: 'source-map',
-    *     externals,
-    *     resolve,
-    *     optimization
-    *   },
-  * ] //.concat(experiments); */
+module.exports = [
+  // Jupyter extension
+  {
+    entry: './src/extension.ts',
+    output: {
+      filename: 'index.js',
+      path: path.resolve(__dirname, 'experiment_widgets', 'nbextension', 'static'),
+      libraryTarget: 'amd'
+    },
+    module: { rules },
+    devtool: 'source-map',
+    externals,
+    resolve,
+    optimization
+  },
+] //.concat(experiments);

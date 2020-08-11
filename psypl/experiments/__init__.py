@@ -9,6 +9,7 @@ from .variable_span import VariableSpanExperiment
 from .semantic_names import SemanticNamesExperiment
 from .variable_distance import VariableDistanceExperiment
 from .variable_count import VariableCountExperiment
+from .tracing_external import TracingExternalExperiment
 
 EXPERIMENTS = [
     FunctionAlignExperiment,
