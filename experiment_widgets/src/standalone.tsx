@@ -20,7 +20,7 @@ export function get_experiment(): Promise<any> {
 }
 
 export function record_results(data: any) {
-  axios.post(`${BASE_URL}/record_results`, data);
+  return axios.post(`${BASE_URL}/record_results`, data);
 }
 
 let NameForm = (props: {next: (name: string) => void}) => {
@@ -176,11 +176,13 @@ if (MTURK) {
 
 
 class ExperimentContainer extends React.Component {
-  state = { participant, experiment: null, demographics: null, finished: false, start: Date.now() }
+  state = { participant, experiment: null, demographics: null, finished: false, start: Date.now(), error: false }
   results: any[] = []
 
   componentDidMount() {
-    get_experiment().then(({data}) => this.setState({experiment: data}));
+    get_experiment()
+      .then(({data}) => this.setState({experiment: data}))
+      .catch((_) => this.setState({error: true}));
 
     if (MTURK) {
       const form = document.getElementById('mturk_form')!;
@@ -205,30 +207,33 @@ class ExperimentContainer extends React.Component {
 
   render() {
     return <div className='experiment'>
-      {this.state.participant == null
+      {this.state.error
+      ? <div>Sorry, an error has occurred. Please return the HIT and email <a href="mailto:wcrichto@cs.stanford.edu">wcrichto@cs.stanford.edu</a>.</div>
+      :
+       (this.state.participant == null
       ? <NameForm next={(name: string) => {
         this.setState({participant: name});
       }} />
       : <Sequence>
-         {/* ConsentForm */}
+        {/* ConsentForm */}
 
-         {Pretest}
+        {Pretest}
 
-         {(props: SeqProps) => <Demographics save_demographics={(data) => {
-           this.setState({demographics: data});
-           props.next()
-         }} />}
+        {(props: SeqProps) => <Demographics save_demographics={(data) => {
+            this.setState({demographics: data});
+            props.next()
+            }} />}
 
-         {(props: SeqProps) => <Instructions start={props.next} experiment={this.state.experiment}
-                                            params={instruction_params} />}
+        {(props: SeqProps) => <Instructions start={props.next} experiment={this.state.experiment}
+            params={instruction_params} />}
 
-         {(props: SeqProps) => <Experiment
-                                save_results={(results: any) => {this.results.push(results);}}
-                                on_finished={() => { this.save_results(); props.next(); }}
-                                {...this.state.experiment!} />}
+        {(props: SeqProps) => <Experiment
+                               save_results={(results: any) => {this.results.push(results);}}
+                               on_finished={() => { this.save_results(); props.next(); }}
+                               {...this.state.experiment!} />}
 
-         {(props: SeqProps) => <ThankYou {...props} />}
-       </Sequence>}
+        {(props: SeqProps) => <ThankYou {...props} />}
+      </Sequence>)}
     </div>;
   }
 }

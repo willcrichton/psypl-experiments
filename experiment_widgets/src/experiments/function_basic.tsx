@@ -23,34 +23,63 @@ export let sample_criterion = (trial: TrialData, response: any) => {
   return answer.toLowerCase() == trial.answer.toLowerCase();
 };
 
-export let TrialView = (timeout: number, answer_time: number) => (props: TrialProps<TrialData>) => {
+interface ProgramViewerProps {
+  program: string
+  annotate: boolean
+}
+
+let ProgramViewer = (props: ProgramViewerProps) => {
+  return <div className='program-viewer'>
+    <pre>{props.program}</pre>
+  </div>;
+};
+
+export interface AnswerBarProps {
+  answer: string,
+  timeout: number
+  answer_time: number,
+  check_answer: (answer: string) => boolean,
+  finished: (response: any) => void,
+  call?: string
+}
+
+export let AnswerBar = (props: AnswerBarProps) => {
   useEffect(() => {
-    const timer = setTimeout(() => props.finished({'response': ''}), timeout * 1000);
+    const timer = setTimeout(() => props.finished({'response': ''}), props.timeout * 1000);
     return () => clearTimeout(timer);
   }, []);
-  let [answer, set_answer] = useState<string | null>(null);
+
+  let [answer, set_answer] = useState<string | undefined>(undefined);
   return <div>
-    <pre>{props.trial.program}</pre>
-    <hr />
-    <div>{props.trial.call
-        ? <span>The value of <code>{props.trial.call!}</code> is:</span>
+    <div>{props.call
+        ? <span>The value of <code>{props.call!}</code> is:</span>
         : <span>The value of the expression is:</span>}
     </div>
-    {answer !== null
-     ? <>
-       <ValueInput value={answer} disabled={true} large={true} correct={sample_criterion(props.trial, {response: answer})}
-                   answer={props.trial.answer} />
-       <ProgressBar key={0} duration={answer_time*1000} />
-     </>
-     : <>
-       <ValueInput large={true} onEnter={(value) => {
-         setTimeout(() => {
-           props.finished({'response': value});
-         }, answer_time*1000);
-         set_answer(value);
-       }} />
-       <ProgressBar key={1} duration={timeout*1000} />
-     </>}
+    {answer !== undefined
+    ? <>
+      <ValueInput value={answer!} disabled={true} large={true} correct={props.check_answer(answer!)}
+                  answer={props.answer} />
+      <ProgressBar key={0} duration={props.answer_time*1000} />
+    </>
+    : <>
+      <ValueInput large={true} onEnter={(value) => {
+        setTimeout(() => {
+          props.finished({response: value});
+        }, props.answer_time*1000);
+        set_answer(value);
+      }} />
+      <ProgressBar key={1} duration={props.timeout*1000} />
+    </>}
+  </div>;
+};
+
+export let TrialView = (timeout: number, answer_time: number) => (props: TrialProps<TrialData>) => {
+  return <div>
+    <ProgramViewer program={props.trial.program} annotate={true} />
+    <hr />
+    <AnswerBar answer={props.trial.answer} timeout={timeout} answer_time={answer_time}
+               check_answer={(answer: string) => sample_criterion(props.trial, {response: answer})}
+               finished={props.finished} />
   </div>
 };
 

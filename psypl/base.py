@@ -53,6 +53,9 @@ class Experiment:
     def init_db(self, db):
         db.insert_one({'experiment_name': self.__class__.__name__, 'participants': {}})
 
+    def clear_db(self, db):
+        db.update_one({'experiment_name': self.__class__.__name__}, {'$set': {'participants': {}}})
+
     def get_mongo_results(self, collection):
         mongo_data = collection.find_one({'experiment_name': self.__class__.__name__})['participants']
         results = []
@@ -69,7 +72,8 @@ class Experiment:
                     'trial_index': trial_index,
                     "duration": result['trial_time'] / 1000.,
                     **(data['demographics'] if 'demographics' in data and data['demographics'] is not None else {}),
-                    **self.eval_trial(trial, result)
+                    **self.eval_trial(trial, result),
+                    **trial
                 })
         return pd.DataFrame(results)
 

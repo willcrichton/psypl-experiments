@@ -52,6 +52,7 @@ interface MultipleTrialsProps<TrialData> {
   on_finished: () => void,
   trials: TrialData[],
   between_trials_time: number
+  break_frequency?: number
 }
 
 interface SequenceState<TrialState> {
@@ -100,7 +101,6 @@ let make_trial_generator = <TrialData, TrialState>(
 };
 
 const BREAK_TIME: number = 30 * 1000;
-const BREAK_EVERY: number = 10;
 
 export
 function make_multiple_trials<TrialData>(TrialView: React.ComponentType<TrialProps<TrialData>>) {
@@ -108,6 +108,7 @@ function make_multiple_trials<TrialData>(TrialView: React.ComponentType<TrialPro
     state = {trial_i: -1, waiting: true, start_time: 0, on_break: false}
 
     next_trial() {
+      let break_frequency = this.props.break_frequency || 10;
       let trial_i = this.state.trial_i;
       if (trial_i == this.props.trials.length - 1) {
         this.props.on_finished();
@@ -118,7 +119,7 @@ function make_multiple_trials<TrialData>(TrialView: React.ComponentType<TrialPro
           this.setState({
             trial_i,
             waiting: false,
-            on_break: trial_i > 0 && trial_i % BREAK_EVERY == 0,
+            on_break: trial_i > 0 && trial_i % break_frequency == 0,
             start_time: now()
           });
         }, this.props.between_trials_time);

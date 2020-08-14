@@ -42,3 +42,9 @@ class VariableCuedRecallExperiment(BaseWidget):
 
 class FunctionBasicExperiment(BaseWidget):
     _view_name = Unicode('FunctionBasicView').tag(sync=True)
+
+class TracingExternalExperiment(BaseWidget):
+    _view_name = Unicode('TracingExternalView').tag(sync=True)
+
+class FunctionMemoryExperiment(BaseWidget):
+    _view_name = Unicode('FunctionMemoryView').tag(sync=True)

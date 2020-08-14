@@ -100,10 +100,11 @@ export let Instructions = (props: {params: InstructionParams, experiment: any, s
       <p>Once you understand the task, please read the following instructions.</p>
 
       <ul>
-        <li>You must give this experiment your undivided attention for its duration. A 30-second break will be provided every 10 trials.</li>
+        <li>You must give this experiment your undivided attention for its duration. A 30-second break will be provided every {props.experiment.break_frequency || 10} trials.</li>
         <li>Please participate in an environment without distractions, either sounds or images.</li>
         <li>If you aren't sure of an answer, you should guess.</li>
         <li>If you are inputting a negative number, you should write a minus sign before the number, e.g. "-5".</li>
+        <li>If you find these tasks too challenging or tiring, please return the HIT. <strong>Your response will be rejected if you do not attempt all of the tasks.</strong></li>
         {instructions.map((el, i) => <li key={i}>{el}</li>)}
       </ul>
 

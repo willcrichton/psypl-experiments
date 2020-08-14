@@ -10,6 +10,7 @@ from .semantic_names import SemanticNamesExperiment
 from .variable_distance import VariableDistanceExperiment
 from .variable_count import VariableCountExperiment
 from .tracing_external import TracingExternalExperiment
+from .function_memory import FunctionMemoryExperiment
 
 EXPERIMENTS = [
     FunctionAlignExperiment,
@@ -22,5 +23,6 @@ EXPERIMENTS = [
     VariableSpanExperiment,
     SemanticNamesExperiment,
     VariableDistanceExperiment,
-    VariableCountExperiment
+    VariableCountExperiment,
+    FunctionMemoryExperiment
 ]
