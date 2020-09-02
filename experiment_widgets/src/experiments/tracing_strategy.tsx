@@ -10,32 +10,29 @@ import {instruction_templates, TaskDescriptionProps, SampleTrial} from '../instr
 import {TrialProps, make_multiple_trials, ValueInput, ProgressBar} from '../common';
 import {AnswerBar, sample_criterion} from './function_basic';
 
-interface FunctionRef {
-  start: number
-  end: number
-  name: string
-}
-
 interface TrialData {
-  functions: {[name: string]: {source: string, refs: FunctionRef[]}}
-  call?: string
+  program: string
+  call: string
   answer: string
 }
 
-class FunctionRefLink implements PluginValue {
+class LineBlur implements PluginValue {
   decorations: RangeSet<Decoration>
 
-  constructor(refs: FunctionRef[], on_click: (ref: FunctionRef) => void) {
+  constructor(program: string, on_hover: (ref: number) => void) {
     let builder = new RangeSetBuilder<Decoration>();
-    refs.forEach((ref, i) => {
+    let idx = 0;
+    program.split('\n').forEach((line, i) => {
+      let length = line.length + 1;
       let mark = Decoration.mark({
-        tagName: 'a', attributes: {color: 'red', href: '#', onClick: `window.func_ref_click(${i})`}
+        tagName: 'span', class: 'blur-line', attributes: {onmouseover: `window.line_hover(${i})`}
       });
-      builder.add(ref.start, ref.end, mark);
+      builder.add(idx + 3, idx + length, mark);
+      idx += length;
     });
     this.decorations = builder.finish();
 
-    (window as any).func_ref_click = (i: number) => on_click(refs[i]);
+    (window as any).line_hover = (i: number) => on_hover(i);
   }
 
   update(update: ViewUpdate) {
@@ -44,22 +41,9 @@ class FunctionRefLink implements PluginValue {
 }
 
 class TrialView extends React.Component<TrialProps<TrialData>> {
-  state = {func: 'main'}
-
   telemetry: any[] = []
   editor_ref = React.createRef<HTMLDivElement>()
   start_time = 0
-  buttons: any[] = []
-
-  constructor(props) {
-    super(props);
-    this.buttons = _.chain(this.props.trial.functions)
-                    .keys()
-                    .shuffle()
-                    .filter(func => func != 'main')
-                    .map(func => <button onClick={() => this.change_func(func)}><code>{func}</code></button>)
-                    .value();
-  }
 
   add_telemetry(action: string, target: string) {
     this.telemetry.push({
@@ -69,19 +53,19 @@ class TrialView extends React.Component<TrialProps<TrialData>> {
   }
 
   render_editor() {
-    let func = this.props.trial.functions[this.state.func];
+    let program = this.props.trial.program;
 
-    let on_click = (ref: FunctionRef) => {
-      this.add_telemetry('enter', ref.name);
-      this.setState({func: ref.name});
+    let on_hover = (i: number) => {
+      this.add_telemetry('hover', i.toString());
+      console.log(this.telemetry);
     };
 
     let extensions = [
       EditorView.editable.of(false),
-      //ViewPlugin.define((_: any) => new FunctionRefLink(func.refs, on_click)).decorations()
+      ViewPlugin.define((_: any) => new LineBlur(program, on_hover)).decorations()
     ];
 
-    let state = EditorState.create({doc: func.source, extensions});
+    let state = EditorState.create({doc: program, extensions});
     let view = new EditorView({state});
 
     let node = this.editor_ref.current!;
@@ -98,18 +82,9 @@ class TrialView extends React.Component<TrialProps<TrialData>> {
     this.render_editor();
   }
 
-  change_func(func) {
-    this.add_telemetry('enter', func);
-    this.setState({func});
-  }
-
   render() {
     return <div>
       <div>
-        <div className='function-list'>
-          <strong>Functions:</strong>
-          {this.buttons}
-        </div>
         <div className='editor'>
           <div ref={this.editor_ref} />
         </div>
@@ -126,21 +101,18 @@ class TrialView extends React.Component<TrialProps<TrialData>> {
 
 export let Experiment = make_multiple_trials<TrialData>(TrialView);
 
-let trial_data: TrialData = {'functions': {'main': {'source': 'j()\n',
-   'refs': [{'start': 0, 'end': 3, 'name': 'j'}]},
-  'j': {'source': 'def j():\n    return s() + 2\n',
-   'refs': [{'start': 20, 'end': 23, 'name': 's'}]},
-  's': {'source': 'def s():\n    return 1 + y()\n',
-   'refs': [{'start': 24, 'end': 27, 'name': 'y'}]},
-  'y': {'source': 'def y():\n    return 3 + 1\n', 'refs': []}},
- 'call': 'j()',
- 'answer': '7'};
+
+let trial_data: TrialData = {
+  'program': 'n = 1 + 7\nd = 1 + 5\nv = 4 + n\nz = v - d\nm = z + 4',
+  'call': 'm',
+  'answer': '10'
+}
 
 let TaskDescription = (props: TaskDescriptionProps) =>
   <div>
     <p>This is an experiment to test your ability to mentally compute the output of short Python programs. Your task is to compute the answer accurately, and as quickly as possible. Your time to answer will be measured.</p>
 
-    <p>These programs will be presented in an unfamiliar way. You will only see one function at a time. Click on a function in the bank above the code to see its definition. Try out a sample:</p>
+    <p>These programs will be presented in an unfamiliar way. The right hand side of each variable assignment will be blurred out. You must move your mouse over the line of code to see its contents. Try out a sample:</p>
 
     <SampleTrial TrialView={TrialView} on_finish={props.done} criterion={sample_criterion} trial_data={trial_data} />
   </div>;

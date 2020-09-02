@@ -57,8 +57,12 @@ class ConstNode:
     def to_mixed_str(self, names):
         return [], str(self.value)
 
-    def to_variable_str(self, _):
-        return [], str(self.value)
+    def to_variable_str(self, fresh, leaf_vars=False):
+        if leaf_vars:
+            var = fresh()
+            return [f"{var} = {self.value}"], var
+        else:
+            return [], str(self.value)
 
 @dataclass(frozen=True)
 class OpNode:
@@ -70,9 +74,9 @@ class OpNode:
     def to_paren_str(self):
         return f"({self.left.to_paren_str()} {self.op} {self.right.to_paren_str()})"
 
-    def to_variable_str(self, fresh):
-        ldefs, lvar = self.left.to_variable_str(fresh)
-        rdefs, rvar = self.right.to_variable_str(fresh)
+    def to_variable_str(self, fresh, leaf_vars=False):
+        ldefs, lvar = self.left.to_variable_str(fresh, leaf_vars)
+        rdefs, rvar = self.right.to_variable_str(fresh, leaf_vars)
         var = fresh()
         return ldefs + rdefs + [f"{var} = {lvar} {self.op} {rvar}"], var
 
@@ -103,16 +107,16 @@ class OpNode:
             f"{name}()",
         )
 
-def random_tree(size):
+def random_tree(size, leaf_vars=False):
     index = 0
 
     def aux(size):
         nonlocal index
-        if size == 0:
+        if size == (1 if leaf_vars else 0):
             return ConstNode(rand_const())
         else:
             size -= 1
-            left_size = randint(0, size)
+            left_size = (choice([i for i in range(1, size) if i % 2 == 1]) if leaf_vars else randint(0, size))
             right_size = size - left_size
             node = OpNode(
                 left=aux(left_size),

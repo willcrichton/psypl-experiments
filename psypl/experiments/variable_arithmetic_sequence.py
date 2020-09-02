@@ -37,14 +37,15 @@ class VariableArithmeticSequenceExperiment(Experiment):
             value = eval(f"{lhs['value']} {op} {rhs['value']}")
             return expression, value
 
-    def generate_experiment(self, N_trials=20):
+    def generate_experiment(self, N_trials=10):
         return {
             "trials": [self.generate_trial() for _ in range(N_trials)],
             "between_trials_time": 4000,
+            "break_frequency": 5
         }
 
     def generate_trial(self):
-        K = 20
+        K = 10
         names = sample(all_names, k=K)
         variables = []
         for i in range(K):
@@ -56,17 +57,16 @@ class VariableArithmeticSequenceExperiment(Experiment):
         return {"variables": variables, "wait_time": 2000}
 
     def analyze_error(self, variables, expression, guess):
-        return "calculation" # TODO
-        # possible_values = [v["value"] for v in variables]
-        # ast = parse(expression).statements[0].value
-        # if len(variables) == 0:
-        #     return "calculation"
+        if len(variables) == 0:
+            return "calculation"
 
-        # op = ast.operator
-        # for (a, b) in itertools.permutations(possible_values, 2):
-        #     if op.eval(a, b) == guess:
-        #         return "substitution"
-        # return "calculation"
+        possible_values = [v["value"] for v in variables]
+        op = (lambda a, b: a + b) if '+' in expression else (lambda a, b: a - b)
+        for (a, b) in itertools.permutations(possible_values, 2):
+            if op(a, b) == guess:
+                return "substitution"
+
+        return "calculation"
 
     def eval_trial(self, trial, result):
         response = result["response"]
@@ -75,7 +75,7 @@ class VariableArithmeticSequenceExperiment(Experiment):
         error = self.analyze_error(
             variables[:i], variables[i]["expression"], response["value"]
         )
-        return {"stage": i, "error": error}
+        return {"stage": i, "error": error, "response": response["value"]}
 
     def simulate_trial(self, trial, model):
         wm = model()

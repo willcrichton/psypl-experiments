@@ -141,6 +141,23 @@ $light-color: #f0faff;
     .explanation-wrapper > div:last-child > p:last-child {
         margin-bottom: 0;
     }
+
+    .function-list {
+        margin-bottom: 10px;
+
+        button { margin-left: 10px; }
+    }
+
+    .blur-line {
+        color: transparent;
+        text-shadow: 0 0 10px rgba(0,0,0,0.3);
+        cursor: default;
+
+        &:hover {
+            color: black;
+            text-shadow: 0 0 0;
+        }
+    }
 }
 
 #submitButton { display: none; }

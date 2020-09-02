@@ -48,3 +48,6 @@ class TracingExternalExperiment(BaseWidget):
 
 class FunctionMemoryExperiment(BaseWidget):
     _view_name = Unicode('FunctionMemoryView').tag(sync=True)
+
+class TracingStrategyExperiment(BaseWidget):
+    _view_name = Unicode('TracingStrategyView').tag(sync=True)

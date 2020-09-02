@@ -22,7 +22,7 @@ def slot_combinations(A,B):
 
 def all_toposorts(tree):
     if isinstance(tree, ConstNode):
-        return [[]]
+        return [[tree]]
     else:
         left_sorts = all_toposorts(tree.left)
         right_sorts = all_toposorts(tree.right)
@@ -40,7 +40,7 @@ class VariableDistanceExperiment(Experiment):
         Far = 2
 
 
-    def generate_experiment(self, N_trials=10):
+    def generate_experiment(self, N_trials=2):
         conditions = list(self.Condition)
         return {
             "trials": shuffle(
@@ -55,7 +55,7 @@ class VariableDistanceExperiment(Experiment):
         
 
     def generate_trial(self, N_var, cond):
-        tree = random_tree(N_var)
+        tree = random_tree(N_var, leaf_vars=True)
 
         names = sample(all_names, k=N_var)
 
@@ -73,24 +73,18 @@ class VariableDistanceExperiment(Experiment):
 
             distances = {}
             for j, node in enumerate(sort):
+                var_names[id(node)] = fresh()
+                if j < len(sort) - 1:
+                    distances[id(node)] = j
+
                 if isinstance(node, ConstNode):
-                    var_names[id(node)] = node.value
+                    stmts.append(f'{var_names[id(node)]} = {node.value}')
                 else:
-                    var_names[id(node)] = fresh()
-                    if j < len(sort) - 1:
-                        distances[id(node)] = j
+                    distances[id(node.left)] = j - distances[id(node.left)]
+                    left_value = var_names[id(node.left)]
 
-                    if isinstance(node.left, OpNode):
-                        distances[id(node.left)] = j - distances[id(node.left)]
-                        left_value = var_names[id(node.left)]
-                    else:
-                        left_value = node.left.value
-
-                    if isinstance(node.right, OpNode):
-                        distances[id(node.right)] = j - distances[id(node.right)]
-                        right_value = var_names[id(node.right)]
-                    else:
-                        right_value = node.right.value
+                    distances[id(node.right)] = j - distances[id(node.right)]
+                    right_value = var_names[id(node.right)]
                     
                     stmts.append(f'{var_names[id(node)]} = {left_value} {node.op} {right_value}')
 

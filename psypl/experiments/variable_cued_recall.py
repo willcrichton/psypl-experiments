@@ -1,4 +1,4 @@
-from random import choice
+from random import choice, choices
 from enum import Enum
 
 import pandas as pd
@@ -62,7 +62,7 @@ bait
 visitor""".split('\n')]
 
 class VariableCuedRecallExperiment(Experiment):
-    all_n_var = [4, 7]
+    all_n_var = [10]
     all_participants = ["will"]
     Widget = experiment_widgets.VariableCuedRecallExperiment
 
@@ -102,8 +102,8 @@ class VariableCuedRecallExperiment(Experiment):
             "cond": trial['cond']
         }
 
-    def generate_experiment(self, N_trials=24):
-        conditions = list(itertools.product(self.all_n_var, list(self.Condition)))
+    def generate_experiment(self, N_trials=8):
+        conditions = list(itertools.product(self.all_n_var, [self.Condition.Letter, self.Condition.Word])) #list(self.Condition)))
         n_conditions = len(conditions)
 
         return {
@@ -113,6 +113,7 @@ class VariableCuedRecallExperiment(Experiment):
                 for _ in range(N_trials // n_conditions)
             ]),
             "between_trials_time": 4000,
+            "break_frequency": 4
         }
 
     def generate_trial(self, N_var, cond):
@@ -124,7 +125,7 @@ class VariableCuedRecallExperiment(Experiment):
             l = words
             
         names = sample(l, k=N_var)
-        values = sample(list(range(1, 10)), k=N_var)
+        values = choices(list(range(0, 10)), k=N_var)
         return {
             "variables": [
                 {"variable": name, "value": value} for name, value in zip(names, values)

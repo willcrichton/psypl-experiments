@@ -144,12 +144,12 @@ let Demographics = (props: {save_demographics: (data: any) => void}) => {
     <p>Please answer the following questions so we can understand your background.</p>
     <p>
       <strong>What is your age?</strong>
-      {["<20", "20-30", "30-40", "40-50", "50+"].map((label) =>
+      {["<20", "20-29", "30-39", "40-49", "50+"].map((label) =>
         <div><input type="radio" name="age" onChange={() => set_age(label)} /> {label}</div>)}
     </p>
     <p>
       <strong>How many years of programming experience do you have?</strong><br />
-      {["<1", "1-3", "3-5", "5+"].map((label) =>
+      {["<1", "1-2", "3-4", "5+"].map((label) =>
         <div><input type="radio" name="experience" onChange={() => set_experience(label)} /> {label}</div>)}
     </p>
     <button className='primary' onClick={save}>Next</button>
@@ -215,17 +215,17 @@ class ExperimentContainer extends React.Component {
         this.setState({participant: name});
       }} />
       : <Sequence>
-        {/* ConsentForm */}
+        {ConsentForm}
 
         {Pretest}
 
         {(props: SeqProps) => <Demographics save_demographics={(data) => {
-            this.setState({demographics: data});
-            props.next()
-            }} />}
+          this.setState({demographics: data});
+          props.next()
+           }} /> }
 
         {(props: SeqProps) => <Instructions start={props.next} experiment={this.state.experiment}
-            params={instruction_params} />}
+                                           params={instruction_params} />}
 
         {(props: SeqProps) => <Experiment
                                save_results={(results: any) => {this.results.push(results);}}

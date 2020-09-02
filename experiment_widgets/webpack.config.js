@@ -60,7 +60,7 @@ module.exports = (env, options) => {
       plugins: [
         new webpack.DefinePlugin({
           EXPERIMENT_NAME: JSON.stringify(exp_name),
-          MTURK: false
+          MTURK: true
         }),
         new HtmlWebpackPlugin({
           template: 'src/standalone.html',
@@ -89,24 +89,23 @@ module.exports = (env, options) => {
     };
   });
 
-  return _.find(experiments, (e) => e.output.filename == 'function_memory.js');
+  //return _.find(experiments, (e) => e.output.filename == 'function_memory.js');
 
-  //module.exports = experiments;
+  return experiments;
 
-  // module.exports = [
-  //   // Jupyter extension
-  //   {
-  //     entry: './src/extension.ts',
-  //     output: {
-  //       filename: 'index.js',
-  //       path: path.resolve(__dirname, 'experiment_widgets', 'nbextension', 'static'),
-  //       libraryTarget: 'amd'
-  //     },
-  //     module: { rules },
-  //     devtool: 'source-map',
-  //     externals,
-  //     resolve,
-  //     optimization
-  //   },
-  // ] //.concat(experiments);
+  /* return [
+    *   // Jupyter extension
+    *   {
+      *     entry: './src/extension.ts',
+      *     output: {
+        *       filename: 'index.js',
+        *       path: path.resolve(__dirname, 'experiment_widgets', 'nbextension', 'static'),
+        *       libraryTarget: 'amd'
+        *     },
+      *     module: { rules },
+      *     devtool: 'source-map',
+      *     externals,
+      *     resolve,
+      *   },
+    * ] //.concat(experiments); */
 }
