@@ -3,9 +3,13 @@ from random import randint, sample
 from dataclasses import dataclass
 from typing import Any
 from random import choice
-
+from graphviz import Digraph
 import seaborn as sns
 from pickle_cache import PickleCache
+import kanren as kr
+import os
+import libcst as cst
+import json
 
 sns.set()
 pcache = PickleCache()
@@ -44,7 +48,7 @@ def interleave(base, sep):
     return " ".join(l)
 
 
-@dataclass(frozen=True)
+@dataclass
 class ConstNode:
     value: int
 
@@ -64,7 +68,16 @@ class ConstNode:
         else:
             return [], str(self.value)
 
-@dataclass(frozen=True)
+    def _draw(self, g, vrs):
+        g.node(vrs[id(self)], label=str(self.value))
+
+    def _kanren(self, vrs):
+        return []
+
+    def depth(self):
+        return {id(self): 0}
+
+@dataclass
 class OpNode:
     left: Any
     right: Any
@@ -107,6 +120,32 @@ class OpNode:
             f"{name}()",
         )
 
+    def draw(self, vrs, **kwargs):
+        g = Digraph(**kwargs)
+        self._draw(g, vrs)
+        return g
+
+    def _draw(self, g, vrs):
+        self.left._draw(g, vrs)
+        self.right._draw(g, vrs)
+
+        g.node(vrs[id(self)], label=self.op)
+        g.edge(vrs[id(self)], vrs[id(self.left)])
+        g.edge(vrs[id(self)], vrs[id(self.right)])
+
+    def kanren(self, vrs):
+        edge = kr.Relation()
+        kr.facts(edge, *self._kanren(vrs))
+        return edge
+    
+    def _kanren(self, vrs):
+        v = vrs[id(self)]
+        return self.left._kanren(vrs) + self.right._kanren(vrs) + [(v, vrs[id(self.left)]), (v, vrs[id(self.right)])]
+
+    def depth(self):
+        depths = {**self.left.depth(), **self.right.depth()}
+        return {id(self): 0, **{k: v + 1 for k, v in depths.items()}}
+
 def random_tree(size, leaf_vars=False):
     index = 0
 
@@ -128,3 +167,30 @@ def random_tree(size, leaf_vars=False):
             return node
 
     return aux(size)
+
+
+def strip_function_details(ast, name=True, comment=True):
+    class Preprocessor(cst.CSTTransformer):
+        def leave_FunctionDef(self, _, new_node):
+            if name:
+                new_node = new_node.with_changes(name=cst.Name(value='mystery'))
+            if comment:
+                new_node = new_node.with_deep_changes(new_node.body, body=new_node.body.body[1:])
+            return new_node
+
+    return ast.visit(Preprocessor())
+
+def load_snippets():
+    snippet_dir = os.path.join(os.path.dirname(__file__), '../data/snippets')
+
+    def parse_snippet(s):
+        ast = cst.parse_module(s)
+        metadata = json.loads(ast.header[0].comment.value[1:])
+        no_comment = ast.with_changes(header=[])
+        return {'program': no_comment, 'metadata': metadata}
+
+    return {
+        os.path.splitext(f)[0]: parse_snippet(open(f'{snippet_dir}/{f}').read())
+        for f in os.listdir(snippet_dir)
+    } 
+    

@@ -50,14 +50,17 @@ class Experiment:
         exp_widget.observe(on_result_change)
         return exp_widget
 
+    def db_key(self):
+        return {'experiment_name': self.__class__.__name__}
+
     def init_db(self, db):
-        db.insert_one({'experiment_name': self.__class__.__name__, 'participants': {}})
+        db.insert_one({**self.db_key(), 'participants': {}})
 
     def clear_db(self, db):
-        db.update_one({'experiment_name': self.__class__.__name__}, {'$set': {'participants': {}}})
+        db.update_one(self.db_key(), {'$set': {'participants': {}}})
 
     def get_mongo_results(self, collection):
-        mongo_data = collection.find_one({'experiment_name': self.__class__.__name__})['participants']
+        mongo_data = collection.find_one(self.db_key())['participants']
         results = []
         for participant, data in mongo_data.items():
             if isinstance(data['trials'][0], list):
@@ -77,4 +80,9 @@ class Experiment:
                 })
         return pd.DataFrame(results)
 
-
+    def add_ind_var(self, collection, varname, value):
+        participants = collection.find_one(self.db_key())['participants']
+        updated = {k: {**v, 'trials': [{**t, varname: value} for t in v['trials']]} 
+                   for k, v in participants.items()}
+        collection.update_one(self.db_key(), {'$set': {'participants': updated}})
+        

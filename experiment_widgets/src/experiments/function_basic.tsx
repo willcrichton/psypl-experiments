@@ -10,7 +10,7 @@ export interface TrialData {
   answer: string
 }
 
-export let sample_criterion = (trial: TrialData, response: any) => {
+export let sample_criterion = (trial: TrialData, response: {response: any}) => {
   let answer = response.response.trim();
   if (answer === null) {
     return false;

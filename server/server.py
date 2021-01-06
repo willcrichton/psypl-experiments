@@ -3,6 +3,7 @@ from flask_cors import CORS
 from flask_pymongo import PyMongo
 from psypl.experiments import EXPERIMENTS
 from bson import json_util
+import epicbox
 
 app = Flask(__name__)
 CORS(app)
@@ -12,6 +13,7 @@ app.config["MONGO_URI"] = "mongodb://moc:moc@localhost:27017/experiments?authSou
 
 mongo = PyMongo(app)
 experiments_db = mongo.db.experiments
+epicbox.configure(profiles=[epicbox.Profile('rust', 'rust')])
 
 def get_experiment(name):
     name = ''.join(name.split('_') + ['experiment'])
@@ -65,6 +67,26 @@ def get_results():
 
     return json_util.dumps(results)
 
+
+@app.route('/api/run_program', methods=['POST'])
+def run_programs():
+    data = request.get_json()
+    program = data['program']
+    language = data['language']
+
+    commands = {
+        'rust': 'rustc main.rs && RUST_BACKTRACE=1 ./main'
+    }
+
+    files = [{'name': 'main.rs', 'content': program.encode('utf-8')}]
+    limits = {'cputime': 5, 'memory': 64}
+    response = epicbox.run(language, commands[language], files=files, limits=limits)
+
+    response['stdout'] = response['stdout'].decode('utf-8')
+    response['stderr'] = response['stderr'].decode('utf-8')
+    return response
+
+
 @app.route("/api/init_db")
 def initdb():
     mongo.db['experiments'].insert_many([{
@@ -90,4 +112,3 @@ def resetexp():
     #     {'experiment_name': experiment.__class__.__name__},
     #     {'$set': {'participants': {}}})
     return 'ok'
-         

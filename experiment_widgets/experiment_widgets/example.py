@@ -51,3 +51,9 @@ class FunctionMemoryExperiment(BaseWidget):
 
 class TracingStrategyExperiment(BaseWidget):
     _view_name = Unicode('TracingStrategyView').tag(sync=True)
+
+class HofQuizExperiment(BaseWidget):
+    _view_name = Unicode('HofQuizView').tag(sync=True)
+
+class WriteProgramsExperiment(BaseWidget):
+    _view_name = Unicode('WriteProgramsView').tag(sync=True)

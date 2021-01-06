@@ -76,7 +76,7 @@ let TaskDescription = (props: TaskDescriptionProps) =>
 
     <p>The sequence will continue until you provide an incorrect response. Then you will restart with a new sequence. Within a sequence, any previously assigned variable can be used in any future expression. However, variable assignments are not reused across sequences.</p>
 
-    <p>Try out a sample trial. This trial will stop after 3 variables, but the real trials will stop after 10 variables.</p>
+    <p>Try out a sample trial. This trial will stop after 3 variables, but the real trials will stop after 11 variables.</p>
 
     <SampleTrial TrialView={TrialView} criterion={sample_criterion} trial_data={sample_data}
                  on_finish={props.done} />

@@ -8,7 +8,7 @@ from libcst.metadata import ScopeProvider
 import libcst.matchers as m
 import json
 
-SNIPPET_DIR = '../data/snippets'
+SNIPPET_DIR = os.path.join(os.path.dirname(__file__), '../../data/snippets')
 SNIPPETS = {
     os.path.splitext(f)[0]: cst.parse_module(open(f'{SNIPPET_DIR}/{f}').read())
     for f in os.listdir(SNIPPET_DIR)

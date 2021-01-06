@@ -12,6 +12,8 @@ from .variable_count import VariableCountExperiment
 from .tracing_external import TracingExternalExperiment
 from .function_memory import FunctionMemoryExperiment
 from .tracing_strategy import TracingStrategyExperiment
+from .tracing_strategy_semantic import TracingStrategySemanticExperiment
+from .hof_quiz import HofQuizExperiment
 
 EXPERIMENTS = [
     FunctionAlignExperiment,
@@ -26,5 +28,7 @@ EXPERIMENTS = [
     VariableDistanceExperiment,
     VariableCountExperiment,
     FunctionMemoryExperiment,
-    TracingStrategyExperiment
+    TracingStrategyExperiment,
+    TracingStrategySemanticExperiment,
+    HofQuizExperiment
 ]

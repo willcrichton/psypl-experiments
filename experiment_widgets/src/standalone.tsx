@@ -45,11 +45,12 @@ let ConsentForm = (props: SeqProps) => {
     <p><strong>PAYMENTS:</strong> You will be paid for your participation in this study.</p>
     <p><strong>PARTICIPANT’S RIGHTS:</strong> If you have read this form and have decided to participate in this project, please understand your participation is voluntary and you have the right to withdraw your consent or discontinue participation at any time without penalty or loss of benefits to which you are otherwise entitled.  The alternative is not to participate.  You have the right to refuse to answer particular questions.  The results of this research study may be presented at scientific or professional meetings or published in scientific journals.  Your individual privacy will be maintained in all published and written data resulting from the study.</p>
     <p><strong>CONTACT INFORMATION:</strong><br />
-      <strong>Questions:</strong> If you have any questions, concerns or complaints about this research, its procedures, risks and benefits, contact the Protocol Director, Will Crichton at wcrichto@cs.stanford.edu.<br /><br />
-      <strong>Independent Contact:</strong> If you are not satisfied with how this study is being conducted, or if you have any concerns, complaints, or general questions about the research or your rights as a participant, please contact the Stanford Institutional Review Board (IRB) to speak to someone independent of the research team at (650)-723-2480 or toll free at 1-866-680-2906, or email at IRB2-Manager@lists.stanford.edu.  You can also write to the Stanford IRB, Stanford University, 1705 El Camino Real, Palo Alto, CA 94306.
+      <strong>Questions:</strong> If you have any questions, concerns or complaints about this research, its procedures, risks and benefits, contact the Protocol Director, Will Crichton at wcrichto@cs.stanford.edu or 515-314-9085.<br /><br />
+      <strong>Independent Contact:</strong> If you are not satisfied with how this study is being conducted, or if you have any concerns, complaints, or general questions about the research or your rights as a participant, please contact the Stanford Institutional Review Board (IRB) to speak to someone independent of the research team at 650-723-2480 or email at IRB2-Manager@lists.stanford.edu, or toll free at 1-866-680-2906.  You can also write to the Stanford IRB, Stanford University, 1705 El Camino Real, Palo Alto, CA 94306.
     </p>
+    <p>Please print a copy of this page for your records.</p>
     <p>
-      <button className='primary' onClick={props.next}>I understand and consent to the study's terms.</button>
+      <button className='primary' onClick={props.next}>If you agree to participate in this research, click here to continue.</button>
     </p>
   </div>;
 }
@@ -161,14 +162,14 @@ let ThankYou = (props: SeqProps) => {
     <p>The experiment is complete. Thank you for your participation!</p>
     {MTURK
     ? <p><input type="submit" value="Click here to conclude the HIT"/></p>
-    : null}
+    : <p>You may close this window now.</p>}
   </div>
 };
 
 
 let participant: string | null;
+const url_params = new URLSearchParams(window.location.search);
 if (MTURK) {
-  const url_params = new URLSearchParams(window.location.search);
   participant = `mturk-${url_params.get('workerId')}`;
 } else {
   participant = null;
@@ -193,7 +194,7 @@ class ExperimentContainer extends React.Component {
   }
 
   save_results() {
-    let data = {
+    let data: any = {
       experiment: EXPERIMENT_NAME,
       description: this.state.experiment!,
       participant: this.state.participant!,
@@ -201,6 +202,10 @@ class ExperimentContainer extends React.Component {
       demographics: this.state.demographics,
       duration: Date.now() - this.state.start
     };
+    if (MTURK) {
+      data.hit_id = url_params.get('hitId');
+      data.assignment_id = url_params.get('assignmentId');
+    }
     record_results(data);
     this.setState({finished: true});
   }
@@ -217,12 +222,12 @@ class ExperimentContainer extends React.Component {
       : <Sequence>
         {ConsentForm}
 
-        {Pretest}
+        {MTURK ? Pretest : null}
 
-        {(props: SeqProps) => <Demographics save_demographics={(data) => {
+        {MTURK ? ((props: SeqProps) => <Demographics save_demographics={(data) => {
           this.setState({demographics: data});
           props.next()
-           }} /> }
+           }} />) : null }
 
         {(props: SeqProps) => <Instructions start={props.next} experiment={this.state.experiment}
                                            params={instruction_params} />}

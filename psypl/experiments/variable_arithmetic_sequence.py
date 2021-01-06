@@ -1,5 +1,6 @@
 import itertools
 from random import choice
+from enum import Enum
 
 import pandas as pd
 from scipy.stats import wasserstein_distance
@@ -14,18 +15,24 @@ class VariableArithmeticSequenceExperiment(Experiment):
     all_exp = [0]
     Widget = experiment_widgets.VariableArithmeticSequenceExperiment
 
+    class Condition(Enum):
+        OneDigit = 1
+        TwoDigit = 2
+
+    cond = Condition.TwoDigit
+
     def exp_name(self, N_var, N_trials, participant=None):
         return f"vararithseq_{N_trials}"
 
     def results(self):
         return pd.concat([self.process_results(N_var, 20) for N_var in self.all_exp])
 
-    def generate_expression(self, variables):
+    def generate_expression(self, variables, consts):
         if len(variables) == 0:
-            value = rand_const()
+            value = consts[0]
             return str(value), value
         elif len(variables) == 1:
-            rhs = rand_const()
+            rhs = consts[1]
             op = choice(all_operators)
             expression = f"{variables[0]['variable']} {op} {rhs}"
             value = eval(f"{variables[0]['value']} {op} {rhs}")
@@ -45,16 +52,18 @@ class VariableArithmeticSequenceExperiment(Experiment):
         }
 
     def generate_trial(self):
-        K = 10
+        K = 11
         names = sample(all_names, k=K)
         variables = []
+        all_consts = range(1, 10) if self.cond == self.Condition.OneDigit else range(20, 40)
+        consts = sample(list(all_consts), k=2)
         for i in range(K):
-            expression, value = self.generate_expression(variables)
+            expression, value = self.generate_expression(variables, consts)
             variables.append(
                 {"variable": names[i], "expression": expression, "value": value}
             )
 
-        return {"variables": variables, "wait_time": 2000}
+        return {"variables": variables, "wait_time": 2000, 'cond': str(self.cond)}
 
     def analyze_error(self, variables, expression, guess):
         if len(variables) == 0:
@@ -75,7 +84,15 @@ class VariableArithmeticSequenceExperiment(Experiment):
         error = self.analyze_error(
             variables[:i], variables[i]["expression"], response["value"]
         )
-        return {"stage": i, "error": error, "response": response["value"]}
+        try:
+            if i == len(variables) - 1 and int(response['value']) == int(variables[-1]['value']):
+                stage = i + 1
+            else:
+                stage = i
+        except TypeError:
+            stage = i
+        return {"stage": stage, "error": error, "response": response["value"]}
+
 
     def simulate_trial(self, trial, model):
         wm = model()

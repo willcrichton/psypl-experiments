@@ -6,6 +6,7 @@ const InlineChunkHtmlPlugin = require('react-dev-utils/InlineChunkHtmlPlugin');
 const webpack = require('webpack');
 const _ = require('lodash');
 const TerserPlugin = require('terser-webpack-plugin');
+const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin');
 
 module.exports = (env, options) => {
   const is_prod = options.mode == 'production';
@@ -14,7 +15,7 @@ module.exports = (env, options) => {
     loader: 'babel-loader',
     options: {
       plugins: ["lodash", "@babel/plugin-transform-template-literals"],
-      presets: ["@babel/preset-env"]
+      presets: [["@babel/preset-env", {targets: {esmodules: true}}]]
     }
   };
 
@@ -22,7 +23,9 @@ module.exports = (env, options) => {
   const rules = [
     { test: /\.tsx?$/, use: [babel_loader, 'ts-loader'] },
     { test: /\.js$/, use: [babel_loader, 'source-map-loader'] },
-    { test: /\.scss$/, use: ['style-loader', 'css-loader', 'sass-loader'] }
+    { test: /\.scss$/, use: ['style-loader', 'css-loader', 'sass-loader'] },
+//    { test: /\.css$/, include: MONACO_DIR, use: ['style-loader', 'css-loader'] },
+//    { test: /.ttf$/, use: ['file-loader'] }
   ];
 
   // Packages that shouldn't be bundled but loaded at runtime
@@ -58,9 +61,10 @@ module.exports = (env, options) => {
       },
       module: { rules },
       plugins: [
+        //new MonacoWebpackPlugin(),
         new webpack.DefinePlugin({
           EXPERIMENT_NAME: JSON.stringify(exp_name),
-          MTURK: true
+          MTURK: false
         }),
         new HtmlWebpackPlugin({
           template: 'src/standalone.html',
@@ -89,23 +93,23 @@ module.exports = (env, options) => {
     };
   });
 
-  //return _.find(experiments, (e) => e.output.filename == 'function_memory.js');
+  return _.find(experiments, (e) => e.output.filename == 'variable_cued_recall.js');
 
-  return experiments;
+  //return experiments;
 
-  /* return [
-    *   // Jupyter extension
-    *   {
-      *     entry: './src/extension.ts',
-      *     output: {
-        *       filename: 'index.js',
-        *       path: path.resolve(__dirname, 'experiment_widgets', 'nbextension', 'static'),
-        *       libraryTarget: 'amd'
-        *     },
-      *     module: { rules },
-      *     devtool: 'source-map',
-      *     externals,
-      *     resolve,
-      *   },
-    * ] //.concat(experiments); */
+  return [
+    // Jupyter extension
+    {
+      entry: './src/extension.ts',
+      output: {
+        filename: 'index.js',
+        path: path.resolve(__dirname, 'experiment_widgets', 'nbextension', 'static'),
+        libraryTarget: 'amd'
+      },
+      module: { rules },
+      devtool: 'source-map',
+      externals,
+      resolve,
+    },
+  ]
 }

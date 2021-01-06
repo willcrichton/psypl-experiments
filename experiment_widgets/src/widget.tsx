@@ -75,3 +75,9 @@ export let FunctionBasicView = make_widget_view(FunctionBasicExperiment);
 
 import {Experiment as TracingStrategyExperiment} from './experiments/tracing_strategy';
 export let TracingStrategyView = make_widget_view(TracingStrategyExperiment);
+
+import {Experiment as HofQuizExperiment} from './experiments/hof_quiz';
+export let HofQuizView = make_widget_view(HofQuizExperiment);
+
+import {Experiment as WriteProgramsExperiment} from './experiments/write_programs';
+export let WriteProgramsView = make_widget_view(WriteProgramsExperiment);

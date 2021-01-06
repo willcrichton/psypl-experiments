@@ -10,7 +10,7 @@ import {instruction_templates, TaskDescriptionProps, SampleTrial} from '../instr
 import {TrialProps, make_multiple_trials, ValueInput, ProgressBar} from '../common';
 import {AnswerBar, sample_criterion} from './function_basic';
 
-interface TrialData {
+export interface TrialData {
   program: string
   call: string
   answer: string
@@ -27,12 +27,14 @@ class LineBlur implements PluginValue {
       let mark = Decoration.mark({
         tagName: 'span', class: 'blur-line', attributes: {onmouseover: `window.line_hover(${i})`}
       });
-      builder.add(idx + 3, idx + length, mark);
+      builder.add(idx, idx + length, mark);
       idx += length;
     });
     this.decorations = builder.finish();
 
-    (window as any).line_hover = (i: number) => on_hover(i);
+    (window as any).line_hover = (i: number) => {
+      on_hover(i);
+    };
   }
 
   update(update: ViewUpdate) {
@@ -40,7 +42,7 @@ class LineBlur implements PluginValue {
   }
 }
 
-class TrialView extends React.Component<TrialProps<TrialData>> {
+export class TrialView extends React.Component<TrialProps<TrialData>> {
   telemetry: any[] = []
   editor_ref = React.createRef<HTMLDivElement>()
   start_time = 0
@@ -57,7 +59,6 @@ class TrialView extends React.Component<TrialProps<TrialData>> {
 
     let on_hover = (i: number) => {
       this.add_telemetry('hover', i.toString());
-      console.log(this.telemetry);
     };
 
     let extensions = [
@@ -90,10 +91,10 @@ class TrialView extends React.Component<TrialProps<TrialData>> {
         </div>
       </div>
       <hr />
-      <AnswerBar answer={this.props.trial.answer} answer_time={2} timeout={90}
+      <AnswerBar answer={this.props.trial.answer} answer_time={2} timeout={120}
                  finished={(response: any) => this.props.finished({
                    telemetry: this.telemetry, ...response})}
-                 check_answer={(answer: string) => answer == this.props.trial.answer}
+                 check_answer={(answer: string) => sample_criterion(this.props.trial, {response: answer})}
                  call={this.props.trial.call} />
     </div>
   }

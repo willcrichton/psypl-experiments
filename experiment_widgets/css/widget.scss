@@ -74,7 +74,7 @@ $light-color: #f0faff;
     }
 
     .exp-input {
-        width: 40px;
+        width: 80px;
 
         &.large {
             width: 400px;
@@ -155,7 +155,42 @@ $light-color: #f0faff;
 
         &:hover {
             color: black;
-            text-shadow: 0 0 0;
+            text-shadow: none;
+        }
+    }
+
+    .editor-container {
+        .editor, .console {
+            border: 1px solid #ccc;
+            padding: 4px;
+            margin: 10px 0;
+            position: relative;
+
+            > button {
+                position: absolute;
+                right: 26px;
+                top: 4px;
+                z-index: 2;
+            }
+
+            > section {
+                z-index: 1;
+            }
+        }
+
+        .console {
+            font-size: 16px;
+        }
+
+        code {
+            padding: 0;
+            font-size: inherit;
+            color: black;
+            background: none;
+        }
+
+        .stderr {
+            color: red;
         }
     }
 }
