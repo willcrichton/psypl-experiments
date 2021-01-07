@@ -1,2 +1,2 @@
 #!/bin/bash
-sudo tar -czf psypl-backup-$(date +%F).tar.gz db
+sudo tar -czf backups/psypl-backup-$(date +%F).tar.gz db
