@@ -12,6 +12,8 @@ const BASE_URL = 'https://mindover.computer/api';
 declare var EXPERIMENT_NAME: string;
 declare var EXPERIMENT_MTURK: boolean;
 declare var EXPERIMENT_IRB: boolean;
+declare var EXPERIMENT_DEMOGRAPHICS: boolean;
+declare var EXPERIMENT_NO_INSTRUCTIONS: boolean;
 
 export function get_experiment(): Promise<any> {
   return axios.get(
@@ -276,18 +278,20 @@ class ExperimentContainer extends React.Component {
             this.setState({participant: name});
           }} />
           : <Sequence>
-            {EXPERIMENT_MTURK && EXPERIMENT_IRB ? ConsentForm : null}
+            {EXPERIMENT_IRB ? ConsentForm : null}
 
             {EXPERIMENT_MTURK ? Pretest : null}
 
-            {EXPERIMENT_MTURK ? ((props: SeqProps) => <Demographics save_demographics={(data) => {
-              this.setState({demographics: data});
-              props.next()
-            }} />) : null }
+            {EXPERIMENT_DEMOGRAPHICS ? ((props: SeqProps) =>
+              <Demographics save_demographics={(data) => {
+                this.setState({demographics: data});
+                props.next()
+              }} />) :
+             null }
 
-            {/* {(props: SeqProps) => <Instructions start={props.next} experiment={this.state.experiment}
-                params={instruction_params} />}
-              */}
+            {!EXPERIMENT_NO_INSTRUCTIONS ? (props: SeqProps) =>
+              <Instructions start={props.next} />
+              : null}
 
             {(props: SeqProps) => <Experiment
                                    save_results={(results: any) => {this.results.push(results);}}

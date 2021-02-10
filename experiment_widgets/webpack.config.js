@@ -8,8 +8,10 @@ const _ = require('lodash');
 const TerserPlugin = require('terser-webpack-plugin');
 const glob = require('glob');
 
-const EXPERIMENT_MTURK = false;
-const EXPERIMENT_IRB = false;
+const EXPERIMENT_MTURK = process.env.BUILD_MTURK == '1';
+const EXPERIMENT_IRB = process.env.BUILD_IRB == '1';
+const EXPERIMENT_DEMOGRAPHICS = process.env.BUILD_DEMOGRAPHICS == '1';
+const EXPERIMENT_NO_INSTRUCTIONS = process.env.BUILD_NO_INSTRUCTIONS == '1';
 
 module.exports = (env, options) => {
   const is_prod = options.mode == 'production';
@@ -69,7 +71,7 @@ module.exports = (env, options) => {
       plugins: [
         new webpack.DefinePlugin({
           EXPERIMENT_NAME: JSON.stringify(exp_name),
-          EXPERIMENT_MTURK, EXPERIMENT_IRB
+          EXPERIMENT_MTURK, EXPERIMENT_IRB, EXPERIMENT_DEMOGRAPHICS, EXPERIMENT_NO_INSTRUCTIONS
         }),
         new HtmlWebpackPlugin({
           template: 'src/standalone.html',
@@ -98,23 +100,31 @@ module.exports = (env, options) => {
     };
   });
 
-  return _.find(experiments, (e) => e.output.filename == 'belief_bias.js');
-
-  //return experiments;
-
-  return [
-    // Jupyter extension
-    {
-      entry: './src/extension.ts',
-      output: {
-        filename: 'index.js',
-        path: path.resolve(__dirname, 'experiment_widgets', 'nbextension', 'static'),
-        libraryTarget: 'amd'
+  let target = process.env.BUILD_TARGET;
+  if (target == 'jupyter') {
+    return [
+      // Jupyter extension
+      {
+        entry: './src/extension.ts',
+        output: {
+          filename: 'index.js',
+          path: path.resolve(__dirname, 'experiment_widgets', 'nbextension', 'static'),
+          libraryTarget: 'amd'
+        },
+        module: { rules },
+        devtool: 'source-map',
+        externals,
+        resolve,
       },
-      module: { rules },
-      devtool: 'source-map',
-      externals,
-      resolve,
-    },
-  ]
+    ]
+  } else if (target == 'standalone') {
+    let only = process.env.BUILD_ONLY;
+    if (only) {
+      return _.find(experiments, (e) => e.output.filename.includes(only));
+    } else {
+      return experiments;
+    }
+  } else {
+    throw new Exception(`Invalid target: ${target}`);
+  }
 }

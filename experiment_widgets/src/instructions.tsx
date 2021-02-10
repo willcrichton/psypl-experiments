@@ -105,6 +105,7 @@ export let Instructions = (props: {start?: () => void}) => {
 
   return <div className='explanation-wrapper'>
     <div className='explanation'>
+      <h1>Experiment Instructions</h1>
       <TaskDescription done={() => set_description_done(true)} />
     </div>
 
