@@ -14,6 +14,7 @@ from .function_memory import FunctionMemoryExperiment
 from .tracing_strategy import TracingStrategyExperiment
 from .tracing_strategy_semantic import TracingStrategySemanticExperiment
 from .hof_quiz import HofQuizExperiment
+from .preconditions import EXPERIMENTS as EXPERIMENTS_PRECONDITIONS
 
 EXPERIMENTS = [
     FunctionAlignExperiment,
@@ -31,4 +32,4 @@ EXPERIMENTS = [
     TracingStrategyExperiment,
     TracingStrategySemanticExperiment,
     HofQuizExperiment
-]
+] + EXPERIMENTS_PRECONDITIONS

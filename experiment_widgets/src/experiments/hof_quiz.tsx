@@ -60,13 +60,6 @@ let TrialView = (props: TrialProps<TrialData>) => {
 
 export let Experiment = make_multiple_trials<TrialData>(TrialView);
 
-interface TrialData {
-  prompt: string
-  answer: boolean
-  test: string
-  program: string
-}
-
 let trial_data: TrialData = {
   prompt: 'This function should take a vector of numbers as input, and return the sum of the even-valued numbers as output.',
   answer: false,

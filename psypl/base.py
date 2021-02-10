@@ -20,6 +20,9 @@ class Experiment:
     def eval_response(self, experiment, results):
         raise NotImplementedError
 
+    def generate_experiment(self, **kwargs):
+        raise NotImplementedError
+
     def process_results(self, participant, **kwargs):
         data = pcache.get(self.exp_name(participant, **kwargs))
         experiment = data["experiment"]

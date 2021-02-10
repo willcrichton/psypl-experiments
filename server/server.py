@@ -47,8 +47,13 @@ def record_results():
     demographics = data['demographics']
     duration = data['duration']
 
+    # Automatically initialize experiment in db if it doesn't exist
+    db_key = experiment.db_key()
+    if experiments_db.find_one(db_key) is None:
+        experiment.init_db(experiments_db)
+
     experiments_db.update_one(
-        {'experiment_name': experiment.__class__.__name__},
+        db_key,
         {'$set': {f'participants.{participant}': {
             'trials': description['trials'],
             'duration': duration,

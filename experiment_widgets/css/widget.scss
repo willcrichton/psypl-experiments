@@ -15,7 +15,7 @@ $font-size: 22px;
 $base-color: rgb(15, 100, 141);
 $light-color: #f0faff;
 
-.experiment {
+.experiment, .ReactModalPortal {
     font-size: $font-size;
     font-family: 'Helvetica Neue', Arial, sans-serif;
 
@@ -81,12 +81,22 @@ $light-color: #f0faff;
         }
     }
 
-    .trial-counter {
-        font-size: 24px;
-        font-weight: bold;
+    .trial-header {
+        overflow: auto;
         margin-bottom: 15px;
         padding-bottom: 7px;
         border-bottom: 1px solid #ccc;
+
+        .trial-counter {
+            font-size: 24px;
+            font-weight: bold;
+            float: left;
+        }
+
+        .trial-instructions {
+            float: right;
+            margin: 0 0 10px 0;
+        }
     }
 
     hr {
@@ -134,8 +144,24 @@ $light-color: #f0faff;
         margin: 0 10px;
     }
 
-    .explanation > div:first-child > p:first-child {
-        margin-top: 0;
+    .explanation {
+        > div:first-child > p:first-child {
+            margin-top: 0;
+        }
+
+        h2 {
+            margin: 30px 0 1rem 0;
+            font-size: 28px;
+        }
+
+        p {
+            margin-top: 0;
+        }
+
+        // element for monaco-editor
+        section {
+            margin-bottom: 1rem;
+        }
     }
 
     .explanation-wrapper > div:last-child > p:last-child {
@@ -192,6 +218,18 @@ $light-color: #f0faff;
         .stderr {
             color: red;
         }
+    }
+
+    textarea {
+        width: 100%;
+        min-height: 95px;
+        line-height: 1.3em;
+    }
+
+    .modal-header {
+        border-bottom: 4px solid #ccc;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
     }
 }
 

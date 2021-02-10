@@ -5,12 +5,13 @@ import axios from 'axios';
 import '../css/widget.scss';
 
 import {Experiment, instruction_params} from 'experiment';
-import {Instructions} from './instructions';
-import {ValueInput, ShowAnswersContext, ProgressBar} from './common';
+import {Instructions, InstructionParamsContext} from './instructions';
+import {ValueInput, ShowAnswersContext, ProgressBar, ExperimentContext} from './common';
 
 const BASE_URL = 'https://mindover.computer/api';
 declare var EXPERIMENT_NAME: string;
-declare var MTURK: boolean;
+declare var EXPERIMENT_MTURK: boolean;
+declare var EXPERIMENT_IRB: boolean;
 
 export function get_experiment(): Promise<any> {
   return axios.get(
@@ -80,6 +81,70 @@ let Question: FunctionComponent<QuestionProps> = (props) => {
   </p>
 }
 
+let PRETESTS = {
+  Python: [
+    {question: <>
+      <span>what is the value of <code>z</code> in the following program?</span>
+      <pre>{`def f(w, q):
+  return q - w
+
+x = 1
+z = f(x, 3)`}</pre>
+    </>,
+     answer: 2},
+
+    {question: <>
+      <span>if we call function <code>c()</code>, how many times is the function <code>a()</code> called?</span>
+      <pre>{`def a():
+  return 1
+def b():
+  return a() + a()
+def c():
+  return b() + b()`}</pre>
+    </>,
+     answer: 4}
+  ],
+
+  Java: [
+    {question: <>
+      <span>what is the final value of <code>x</code> in the following program?</span>
+      <pre>{`
+List<int> l = Arrays.asList(5, 2, 1, 6);
+int x = 0;
+for (int n : l) {
+  if (n % 2 == 0) {
+    x += n;
+  }
+}
+`}</pre>
+    </>,
+     answer: 8},
+
+    {question: <>
+      <span>how many public methods does does the class `C` contain?</span>
+      <pre>{`
+interface A {
+  public void foo();
+}
+
+class B {
+  public void bar() {}
+  public void baz() {}
+}
+
+class C extends B implements A {
+  public void foo() {}
+  public void quux() {}
+}
+        `}
+      </pre>
+    </>,
+     answer: 4}
+  ]
+};
+
+let PRETEST_LANGUAGE = "Java";
+
 let Pretest = (props: SeqProps) => {
   let [attempt, set_attempt] = useState(0);
   let [correct, set_correct] = useState([false, false]);
@@ -96,28 +161,17 @@ let Pretest = (props: SeqProps) => {
   let onto_next_stage = attempt > 0 && last_correct[0] && last_correct[1];
 
   return <div>
-    <h1>Python Pretest</h1>
-    <p>For this experiment, we require that you understand basic Python syntax (as said in the title and description of the HIT). You need to correctly answer the following two questions. Both answers should be a one-digit number.</p>
+    <h1>{PRETEST_LANGUAGE} Pretest</h1>
+    <p>For this experiment, we require that you understand basic {PRETEST_LANGUAGE} programs (as said in the title and description of the HIT). You need to correctly answer the following two questions. Both answers are a one-digit number.</p>
     { attempt > 1 && !(last_correct[0] && last_correct[1])
       ? <p><strong>You did not pass the pretest. Please return the HIT.</strong></p>
       : <>
-        <Question name="1" answer={2} attempt={attempt} set_correct={(c) => set_correct([c, correct[1]])}>
-          what is the value of <code>z</code> in the following program?
-          <pre>{`def f(w, q):
-  return q - w
-
-x = 1
-z = f(x, 3)`}</pre>
-        </Question>
-        <Question name="2" answer={4} attempt={attempt} set_correct={(c) => set_correct([correct[0], c])}>
-          if we call function <code>c()</code>, how many times is the function <code>a()</code> called?
-          <pre>{`def a():
-  return 1
-def b():
-  return a() + a()
-def c():
-  return b() + b()`}</pre>
-        </Question>
+        {PRETESTS[PRETEST_LANGUAGE].map((({question, answer}, i) =>
+          <Question name={i+1} answer={answer} attempt={attempt} set_correct={(c) => {
+            correct[i] = c;
+            set_correct(correct)
+          }}>{question}</Question>
+        ))}
         <button className='primary' onClick={check_answers} disabled={onto_next_stage}>Submit answers</button>
         {onto_next_stage
                  ? <p><strong>You passed the pre-test. Proceeding to the experiment... <ProgressBar duration={3000} /></strong></p>
@@ -160,7 +214,7 @@ let Demographics = (props: {save_demographics: (data: any) => void}) => {
 let ThankYou = (props: SeqProps) => {
   return <div>
     <p>The experiment is complete. Thank you for your participation!</p>
-    {MTURK
+    {EXPERIMENT_MTURK
     ? <p><input type="submit" value="Click here to conclude the HIT"/></p>
     : <p>You may close this window now.</p>}
   </div>
@@ -169,7 +223,7 @@ let ThankYou = (props: SeqProps) => {
 
 let participant: string | null;
 const url_params = new URLSearchParams(window.location.search);
-if (MTURK) {
+if (EXPERIMENT_MTURK) {
   participant = `mturk-${url_params.get('workerId')}`;
 } else {
   participant = null;
@@ -185,7 +239,7 @@ class ExperimentContainer extends React.Component {
       .then(({data}) => this.setState({experiment: data}))
       .catch((_) => this.setState({error: true}));
 
-    if (MTURK) {
+    if (EXPERIMENT_MTURK) {
       const form = document.getElementById('mturk_form')!;
       form.onsubmit = () => {
         return this.state.finished;
@@ -202,7 +256,7 @@ class ExperimentContainer extends React.Component {
       demographics: this.state.demographics,
       duration: Date.now() - this.state.start
     };
-    if (MTURK) {
+    if (EXPERIMENT_MTURK) {
       data.hit_id = url_params.get('hitId');
       data.assignment_id = url_params.get('assignmentId');
     }
@@ -211,35 +265,40 @@ class ExperimentContainer extends React.Component {
   }
 
   render() {
-    return <div className='experiment'>
-      {this.state.error
-      ? <div>Sorry, an error has occurred. Please return the HIT and email <a href="mailto:wcrichto@cs.stanford.edu">wcrichto@cs.stanford.edu</a>.</div>
-      :
-       (this.state.participant == null
-      ? <NameForm next={(name: string) => {
-        this.setState({participant: name});
-      }} />
-      : <Sequence>
-        {ConsentForm}
+    return <ExperimentContext.Provider value={this.state.experiment}>
+      <InstructionParamsContext.Provider value={instruction_params}>
+        <div className='experiment'>
+          {this.state.error
+          ? <div>Sorry, an error has occurred. Please return the HIT and email <a href="mailto:wcrichto@cs.stanford.edu">wcrichto@cs.stanford.edu</a>.</div>
+          :
+           (this.state.participant == null
+          ? <NameForm next={(name: string) => {
+            this.setState({participant: name});
+          }} />
+          : <Sequence>
+            {EXPERIMENT_MTURK && EXPERIMENT_IRB ? ConsentForm : null}
 
-        {MTURK ? Pretest : null}
+            {EXPERIMENT_MTURK ? Pretest : null}
 
-        {MTURK ? ((props: SeqProps) => <Demographics save_demographics={(data) => {
-          this.setState({demographics: data});
-          props.next()
-           }} />) : null }
+            {EXPERIMENT_MTURK ? ((props: SeqProps) => <Demographics save_demographics={(data) => {
+              this.setState({demographics: data});
+              props.next()
+            }} />) : null }
 
-        {(props: SeqProps) => <Instructions start={props.next} experiment={this.state.experiment}
-                                           params={instruction_params} />}
+            {/* {(props: SeqProps) => <Instructions start={props.next} experiment={this.state.experiment}
+                params={instruction_params} />}
+              */}
 
-        {(props: SeqProps) => <Experiment
-                               save_results={(results: any) => {this.results.push(results);}}
-                               on_finished={() => { this.save_results(); props.next(); }}
-                               {...this.state.experiment!} />}
+            {(props: SeqProps) => <Experiment
+                                   save_results={(results: any) => {this.results.push(results);}}
+                                   on_finished={() => { this.save_results(); props.next(); }}
+                                   {...this.state.experiment!} />}
 
-        {(props: SeqProps) => <ThankYou {...props} />}
-      </Sequence>)}
-    </div>;
+            {(props: SeqProps) => <ThankYou {...props} />}
+          </Sequence>)}
+        </div>
+      </InstructionParamsContext.Provider>
+    </ExperimentContext.Provider>;
   }
 }
 

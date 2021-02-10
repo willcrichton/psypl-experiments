@@ -1,9 +1,14 @@
 import React, {useState, useContext} from 'react';
 import {Line} from 'rc-progress';
+import Editor from '@monaco-editor/react';
+import ReactModal from 'react-modal';
+import {Instructions, InstructionReviewContext} from './instructions';
 
 function now(): number {
   return new Date().getTime();
 }
+
+export let ExperimentContext = React.createContext<null | any>(null);
 
 export interface ProgressBarProps {
   duration: number
@@ -102,6 +107,32 @@ let make_trial_generator = <TrialData, TrialState>(
 
 const BREAK_TIME: number = 30 * 1000;
 
+let ReviewInstructions = ({}) => {
+  let [show, set_show] = useState(false);
+  let width = 750;
+  return <>
+    <button className='trial-instructions' onClick={() => set_show(true)}>
+      Review instructions
+    </button>
+    <ReactModal
+      isOpen={show}
+      shouldCloseOnOverlayClick={true}
+      onRequestClose={() => set_show(false)}
+      style={{content: {width: `${width}px`, left: `calc(50% - ${width/2}px)`}}}>
+      <InstructionReviewContext.Provider value={true}>
+        <div className='modal-header'>
+          <button className='primary' onClick={() => set_show(false)}>Return to experiment</button>
+          <strong>&nbsp; Note: the trial timer is still going!</strong>
+        </div>
+        <div className='modal-wrapper'>
+          <Instructions />
+        </div>
+      </InstructionReviewContext.Provider>
+    </ReactModal>
+  </>
+};
+
+
 export
 function make_multiple_trials<TrialData>(TrialView: React.ComponentType<TrialProps<TrialData>>) {
   return class extends React.Component<MultipleTrialsProps<TrialData>, {trial_i: number, waiting: boolean, start_time: number, on_break: boolean}> {
@@ -148,8 +179,11 @@ function make_multiple_trials<TrialData>(TrialView: React.ComponentType<TrialPro
       }
 
       return <div>
-        <div className='trial-counter'>
-          Trial {trial_i+1}/{this.props.trials.length}
+        <div className='trial-header'>
+          <div className='trial-counter'>
+            Trial {trial_i+1}/{this.props.trials.length}
+          </div>
+          <ReviewInstructions />
         </div>
         <div className='trial'>
           {this.state.on_break
@@ -208,3 +242,17 @@ export function ValueInput(props: ValueInputProps) {
     : null}
   </span>;
 }
+
+export let CodeView = (props: {program: string, language: string}) =>
+  <Editor
+    language={props.language}
+    height={props.program.split('\n').length * 25}
+    value={props.program}
+    options={{
+      readOnly: true,
+      scrollBeyondLastLine: false,
+      minimap: {enabled: false},
+      fontSize: 16,
+      lineNumbers: "off",
+      folding: false
+    }} />;

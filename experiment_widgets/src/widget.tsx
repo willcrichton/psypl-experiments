@@ -81,3 +81,6 @@ export let HofQuizView = make_widget_view(HofQuizExperiment);
 
 import {Experiment as WriteProgramsExperiment} from './experiments/write_programs';
 export let WriteProgramsView = make_widget_view(WriteProgramsExperiment);
+
+import {Experiment as BeliefBiasExperiment} from './experiments/preconditions/belief_bias';
+export let BeliefBiasView = make_widget_view(BeliefBiasExperiment);

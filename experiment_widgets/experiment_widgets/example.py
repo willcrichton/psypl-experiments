@@ -57,3 +57,9 @@ class HofQuizExperiment(BaseWidget):
 
 class WriteProgramsExperiment(BaseWidget):
     _view_name = Unicode('WriteProgramsView').tag(sync=True)
+
+class WriteProgramsExperiment(BaseWidget):
+    _view_name = Unicode('WriteProgramsView').tag(sync=True)
+
+class BeliefBiasExperiment(BaseWidget):
+    _view_name = Unicode('BeliefBiasView').tag(sync=True)

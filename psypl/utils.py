@@ -10,6 +10,7 @@ import kanren as kr
 import os
 import libcst as cst
 import json
+from pymongo import MongoClient
 
 sns.set()
 pcache = PickleCache()
@@ -194,3 +195,9 @@ def load_snippets():
         for f in os.listdir(snippet_dir)
     } 
     
+
+
+def get_experiments_db():
+    client = MongoClient('mongodb://moc:moc@localhost:27017/experiments?authSource=admin')
+    return client.experiments.experiments
+

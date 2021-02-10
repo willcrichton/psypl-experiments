@@ -6,7 +6,10 @@ const InlineChunkHtmlPlugin = require('react-dev-utils/InlineChunkHtmlPlugin');
 const webpack = require('webpack');
 const _ = require('lodash');
 const TerserPlugin = require('terser-webpack-plugin');
-const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin');
+const glob = require('glob');
+
+const EXPERIMENT_MTURK = false;
+const EXPERIMENT_IRB = false;
 
 module.exports = (env, options) => {
   const is_prod = options.mode == 'production';
@@ -24,8 +27,6 @@ module.exports = (env, options) => {
     { test: /\.tsx?$/, use: [babel_loader, 'ts-loader'] },
     { test: /\.js$/, use: [babel_loader, 'source-map-loader'] },
     { test: /\.scss$/, use: ['style-loader', 'css-loader', 'sass-loader'] },
-//    { test: /\.css$/, include: MONACO_DIR, use: ['style-loader', 'css-loader'] },
-//    { test: /.ttf$/, use: ['file-loader'] }
   ];
 
   // Packages that shouldn't be bundled but loaded at runtime
@@ -36,7 +37,10 @@ module.exports = (env, options) => {
     extensions: [".webpack.js", ".web.js", ".ts", ".tsx", ".js", ".scss"],
 
     // default to make TSC happy
-    alias: { experiment: path.resolve(__dirname, 'src/experiments/variable_cued_recall.tsx') }
+    alias: { experiment: path.resolve(__dirname, 'src/experiments/variable_cued_recall.tsx') },
+
+    // Allow root imports from src
+    modules: [path.resolve(__dirname, 'src'), path.resolve(__dirname, 'node_modules')]
   };
 
   let external_scripts = [
@@ -50,21 +54,22 @@ module.exports = (env, options) => {
      "https://cdn.jsdelivr.net/npm/lodash@4.17.19/lodash.min.js"]
   ];
 
-  const experiments = fs.readdirSync('src/experiments').map((fname) => {
-    const exp_name = path.basename(fname, '.tsx');
+  const EXPERIMENTS_DIR = 'src/experiments';
+  const experiments = glob.sync(`${EXPERIMENTS_DIR}/**/*.tsx`).map(pathname => {
+    const exp_dir = path.dirname(path.relative(EXPERIMENTS_DIR, pathname));
+    const exp_name = path.basename(pathname, '.tsx');
     return {
       entry: './src/standalone.tsx',
       output: {
         filename: `${exp_name}.js`,
         libraryTarget: 'var',
-        path: path.resolve(__dirname, '../server/static/experiments_dev')
+        path: path.resolve(__dirname, `../server/static/experiments_dev/${exp_dir}`, )
       },
       module: { rules },
       plugins: [
-        //new MonacoWebpackPlugin(),
         new webpack.DefinePlugin({
           EXPERIMENT_NAME: JSON.stringify(exp_name),
-          MTURK: false
+          EXPERIMENT_MTURK, EXPERIMENT_IRB
         }),
         new HtmlWebpackPlugin({
           template: 'src/standalone.html',
@@ -81,7 +86,7 @@ module.exports = (env, options) => {
       ...(is_prod ? {} : {devtool: 'inline-source-map'}),
       resolve: {
         ...resolve,
-        alias: { experiment: path.resolve(__dirname, `src/experiments/${fname}`) }
+        alias: { experiment: path.resolve(__dirname, pathname) }
       },
       optimization: {minimizer: [new TerserPlugin()]},
       externals: {
@@ -93,7 +98,7 @@ module.exports = (env, options) => {
     };
   });
 
-  return _.find(experiments, (e) => e.output.filename == 'variable_cued_recall.js');
+  return _.find(experiments, (e) => e.output.filename == 'belief_bias.js');
 
   //return experiments;
 
