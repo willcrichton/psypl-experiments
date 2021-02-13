@@ -145,7 +145,7 @@ $RECYCLE.BIN/
 # ----
 
 **/node_modules/
-experiment_widgets/nbextension/static/index.*
+experiment_widgets/nbextension/static
 experiment_widgets/labextension/*.tgz
 
 # Coverage data

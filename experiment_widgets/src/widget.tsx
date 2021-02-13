@@ -2,85 +2,65 @@
 // Distributed under the terms of the Modified BSD License.
 
 // Import the CSS
-import React from 'react';
+import React, {useState} from 'react';
 import ReactDOM from 'react-dom';
 import {DOMWidgetView, DOMWidgetModel} from '@jupyter-widgets/base';
 import '../css/widget.scss';
+import {ExperimentContext} from './common';
+import {InstructionParamsContext} from './instructions';
 
 export class ExperimentModel extends DOMWidgetModel {};
 
-function make_widget_view(Experiment: any): any {
-  return class extends DOMWidgetView {
-    render() {
-      let model = this.model;
+export class ExperimentWidget extends DOMWidgetView {
+  render() {
+    let model = this.model;
 
-      let save_results = (results: any) => {
-        let all_results = JSON.parse(model.get('results'));
-        all_results.push(results);
-        model.set('results', JSON.stringify(all_results));
-        model.save_changes();
-      };
+    let save_results = (results: any) => {
+      let all_results = JSON.parse(model.get('results'));
+      all_results.push(results);
+      model.set('results', JSON.stringify(all_results));
+      model.save_changes();
+    };
 
-      model.on('change', () => {this.touch();});
-      let props = JSON.parse(model.get('experiment'));
+    model.on('change', () => {this.touch();});
+    let name = model.get('experiment_name');
+    let props = JSON.parse(model.get('experiment_data'));
 
-      class View extends React.Component {
-        state = {started: false, finished: false}
-
-        render() {
-          let on_finished = () => {
-            this.setState({finished: true});
-          };
-
-          return <div className='experiment'>{
-            !this.state.started
-              ? <button onClick={() => {this.setState({started: true})}}>
-                Click to start the experiment when you're ready
-              </button>
-              : (!this.state.finished
-                ? <Experiment save_results={save_results}
-                              on_finished={on_finished}
-                              {...props} />
-                : <div>Done!</div>)
-          }</div>;
-        }
+    (async () => {
+      let [base, file] = name.split('/');
+      let module;
+      if (base == '') {
+        module = import(`./experiments/${file}.tsx`);
+      } else if (base == 'preconditions') {
+        module = import(`./experiments/preconditions/${file}.tsx`);
+      } else {
+        throw "Need to add stupid import statement to widget.tsx";
       }
 
+      let {Experiment, instruction_params} = await module;
+
+      let View = () => {
+        let [started, set_started] = useState(false);
+        let [finished, set_finished] = useState(false);
+
+        return <ExperimentContext.Provider value={props}>
+          <InstructionParamsContext.Provider value={instruction_params}>
+            <div className='experiment'>{
+              !started
+              ? <button onClick={() => {set_started(true);}}>
+                Click to start the experiment when you're ready
+              </button>
+              : (!finished
+               ? <Experiment save_results={save_results}
+                             on_finished={() => set_finished(true)}
+                             {...props} />
+           : <div>Done!</div>)
+            }</div>
+          </InstructionParamsContext.Provider>
+        </ExperimentContext.Provider>;
+      };
+
       ReactDOM.render(<View />, this.el);
-    }
+    })()
   }
 }
-
-/* import {Experiment as VariableSpanExperiment} from './experiments/variable_span';
-* export let VariableSpanView = make_widget_view(VariableSpanExperiment);
-*
-* import {Experiment as VariableArithmeticMemoryExperiment} from './experiments/variable_arithmetic_memory';
-* export let VariableArithmeticMemoryView = make_widget_view(VariableArithmeticMemoryExperiment);
-*
-* import {Experiment as VariableTracingExperiment} from './experiments/variable_tracing';
-* export let VariableTracingView = make_widget_view(VariableTracingExperiment);
-*
-* import {Experiment as VariableTracingHardExperiment} from './experiments/variable_tracing_hard';
-* export let VariableTracingHardView = make_widget_view(VariableTracingHardExperiment);
-*  */
-
-import {Experiment as VariableArithmeticSequenceExperiment} from './experiments/variable_arithmetic_sequence';
-export let VariableArithmeticSequenceView = make_widget_view(VariableArithmeticSequenceExperiment);
-
-import {Experiment as VariableCuedRecallExperiment} from './experiments/variable_cued_recall';
-export let VariableCuedRecallView = make_widget_view(VariableCuedRecallExperiment);
-
-import {Experiment as FunctionBasicExperiment} from './experiments/function_basic';
-export let FunctionBasicView = make_widget_view(FunctionBasicExperiment);
-
-import {Experiment as TracingStrategyExperiment} from './experiments/tracing_strategy';
-export let TracingStrategyView = make_widget_view(TracingStrategyExperiment);
-
-import {Experiment as HofQuizExperiment} from './experiments/hof_quiz';
-export let HofQuizView = make_widget_view(HofQuizExperiment);
-
-import {Experiment as WriteProgramsExperiment} from './experiments/write_programs';
-export let WriteProgramsView = make_widget_view(WriteProgramsExperiment);
-
-import {Experiment as BeliefBiasExperiment} from './experiments/preconditions/belief_bias';
-export let BeliefBiasView = make_widget_view(BeliefBiasExperiment);

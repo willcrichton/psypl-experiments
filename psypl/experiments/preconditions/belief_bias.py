@@ -5,8 +5,6 @@ from enum import IntEnum
 
 
 class BeliefBiasExperiment(Experiment):
-    Widget = experiment_widgets.BeliefBiasExperiment
-
     class Content(IntEnum):
         Abstract = 1
         Realistic = 2

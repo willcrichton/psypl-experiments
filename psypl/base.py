@@ -4,6 +4,9 @@ import itertools
 import json
 from copy import deepcopy
 import re
+import experiment_widgets
+import inspect
+from pathlib import Path
 
 from .utils import pcache
 
@@ -41,9 +44,19 @@ class Experiment:
         prev_results["results"].extend(results)
         pcache.set(pkey, prev_results)
 
+    def js_class(self):
+        class_path = Path(inspect.getfile(self.__class__))
+        class_rel_path = class_path.relative_to(Path(__file__).parent / 'experiments')
+        class_dir = class_rel_path.parent
+        class_name = '_'.join([p.lower() for p in self.name_parts()[:-1]])
+        return f'{class_dir}/{class_name}'
+
     def run_experiment(self, N_trials=20, dummy=False):
         exp_desc = self.generate_experiment(N_trials=N_trials)
-        exp_widget = self.Widget(experiment=json.dumps(exp_desc), results=json.dumps([]))
+        exp_widget = experiment_widgets.ExperimentWidget(
+            experiment_name=self.js_class(),
+            experiment_data=json.dumps(exp_desc), 
+            results=json.dumps([]))
 
         def on_result_change(_):
             if not dummy:
